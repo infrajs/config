@@ -1,0 +1,12 @@
+{
+	"name": "infrajs/config",
+	"license": "GPL3",
+	"autoload": {
+		"psr-4": { "infrajs\\config\\": "" }
+	},
+	"require":{
+		"infrajs/once":"~1",
+		"infrajs/path":"~1",
+		"infrajs/load":"~1"
+	}
+}
