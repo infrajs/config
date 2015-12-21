@@ -106,6 +106,7 @@ class Config {
 
 			$d=Load::json_decode($d);
 			if ($name) {
+				
 				Config::accept($name, $d);
 			} else {
 				foreach ($d as $k => &$v) {
@@ -118,6 +119,7 @@ class Config {
 	{
 		$conf=&Config::$conf;
 		if (empty($conf[$name])) $conf[$name] = array();
+		if (!is_array($v)) return;
 		foreach ($v as $kk => $vv) {
 			if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 			if ($kk == 'require') {
