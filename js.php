@@ -2,8 +2,8 @@
 use infrajs\access\Access;
 use infrajs\load\Load;
 use infrajs\infra\Infra;
-use infrajs\infra\Config;
-use infrajs\infra\Each;
+use infrajs\config\Config;
+use infrajs\each\Each;
 use infrajs\event\Event;
 use infrajs\view\View;
 use infrajs\path\Path;
@@ -24,7 +24,7 @@ $html = Access::cache('infra_js_php', function ($str) {
 	View::$js .= 'window.infra={}; window.infrajs={};';
 	View::$js .= 'infra.conf=('.Load::json_encode($conf).');infra.config=function(){return infra.conf;};';
 	View::$js .= '
-		define("?-infra/js.php", ["?-controller/init.js"], function (infrajs) { 
+		define("?-config/js.php", ["?-controller/init.js"], function (infrajs) { 
 			console.log("js defined");
 			return infrajs; 
 		});
