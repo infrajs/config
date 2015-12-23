@@ -13,6 +13,7 @@ class Config {
 	public static function init()
 	{
 		Once::exec('infrajs::Config::init', function() {
+			header('Infrajs-Config-All: false');
 			Config::load('.infra.json');
 			Config::load('~.infra.json');
 
@@ -58,7 +59,7 @@ class Config {
 	public static function getAll()
 	{
 		Once::exec('Infrajs::Config::getAll', function () {
-			header('Infrajs-Config: All');
+			header('Infrajs-Config-All: true');
 			/**
 			 * Для того чтобы в текущем сайте можно было разрабатывать расширения со своим конфигом, 
 			 * нужно добавить путь до родительской папки с расширениями в path.config.search

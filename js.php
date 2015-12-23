@@ -21,10 +21,10 @@ Nostore::pub();
 header('Infrajs-Cache: true');
 $html = Access::cache('infra_js_php', function ($str) {
 	header('Infrajs-Cache: false');
-	View::$js .= 'window.infra={}; window.infrajs={};';
-	View::$js .= 'infra.conf=('.Load::json_encode($conf).');infra.config=function(){return infra.conf;};';
+	View::$js .= 'window.infra={}; window.infrajs={ };';
+	View::$js .= 'infra.conf=('.Load::json_encode($conf).');infra.config=function(){ return infra.conf; };';
 	View::$js .= '
-		define("?-config/js.php", ["?-controller/init.js"], function (infrajs) { 
+		define("/-config/js.php", ["/-controller/init.js"], function (infrajs) { 
 			console.log("js defined");
 			return infrajs; 
 		});
