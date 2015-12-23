@@ -151,7 +151,7 @@ class Config {
 	{
 		if ($plugin) {
 			$conf=Config::get($plugin);
-			$conf=pubclean($conf);
+			$conf=Config::pubclean($conf);
 			return $conf;
 		} 
 		$conf=Config::get();
