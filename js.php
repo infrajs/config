@@ -31,10 +31,10 @@ $html = Access::cache('infra_js_php', function ($str) {
 
 	';
 
-	//$conf = Infra::pub();
-	$r=Path::theme('-jquery/jquery.min.js');
+	
 
-	View::js('-jquery/jquery.min.js');
+	//View::js('-jquery/jquery.min.js');
+	//View::js('-bootstrap/dist/js/bootstrap.min.js');
 
 	View::js('-event/event.js');
 
@@ -46,7 +46,7 @@ $html = Access::cache('infra_js_php', function ($str) {
 		
 	
 
-	View::js('-infra/src/Each.js');
+	View::js('-each/each.js');
 	View::js('-view/view.js');
 
 	
@@ -60,8 +60,6 @@ $html = Access::cache('infra_js_php', function ($str) {
 
 
 
-
-	View::js('-loader/loader.js');
 
 	
 
