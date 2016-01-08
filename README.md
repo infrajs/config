@@ -18,3 +18,14 @@ dependencies:'module' - указывает модуль, который долж
 	...
 </body>
 ```
+
+# infra.json
+
+```json
+{
+	"dependencies":"event",
+	"require":"script.php",
+	"js":"script.js",
+	"pub":"propname"
+}
+```

@@ -167,14 +167,13 @@ class Config {
 	}
 	private static function pubclean($part)
 	{
-		if (empty($part['pub']))return null;
-		$pub = $part['pub'];
-		foreach ($part as $name => $val) {
-			if (!in_array($name, $pub)) {
-				unset($part[$name]);
-			}
-		}
-		return $part;
+		if (empty($part['pub'])) return null;
+		$newpart = array();
+		Each::exec($part['pub'], function ($pub) use (&$newpart, &$part) {
+			if (!isset($part[$pub])) return;
+			$newpart[$pub]=$part[$pub];
+		});
+		return $newpart;
 	}
 	public static function &pub($plugin = null) 
 	{
