@@ -20,8 +20,8 @@ class Config {
 			Config::get('path');
 			Config::get('config');
 			Config::get('each');
-			Config::get('once');
 			Config::get('hash');
+			Config::get('once');
 			Config::get('load');
 			Config::get('ans');
 
@@ -49,14 +49,16 @@ class Config {
 				Config::$exec[$name]=true;
 				spl_autoload_call($class_name);
 				Config::get($name); //В require мог установиться ключ install
-				if (Config::$install) Config::get(); //Ключ install Заставляет загрузить все имеющийся расширения, чтобы они установились как надо.
+				if (Config::$install) {
+					Config::get(); //Ключ install Заставляет загрузить все имеющийся расширения, чтобы они установились как надо.
+				}
 			}, true, true);
 			set_error_handler(function(){ //bugfix
 				ini_set('display_errors',true);
 			});
 		});
 	}
-	public static function getAll()
+	public static function &getAll()
 	{
 		Once::exec('Infrajs::Config::getAll', function () {
 			header('Infrajs-Config-All: true');
@@ -73,17 +75,27 @@ class Config {
 				foreach($files as $file){
 					if ($file{0} == '.') continue;
 					if (is_file($tsrc.$file)) continue;
-					Config::load($tsrc.$file.'/.infra.json', $file);
+					Config::load('-'.$file.'/.infra.json', $file);
 				}
 			}
+			
 		});
+		
 		return Config::$conf;
 	}
-	public static function get($name = null)
+	public static function &get($name = null)
 	{
-		if (!$name) return static::getAll();
+		if (!$name) {
+			$r=static::getAll();
+			return $r;
+			
+		}
 		Config::load('-'.$name.'/.infra.json', $name);
-		if (!isset(Config::$conf[$name])) return null;
+		
+		if (!isset(Config::$conf[$name])) {
+			$r=null;
+			return $r;
+		}
 		return Config::$conf[$name];
 	}
 	public static function reqsrc($src)
@@ -104,10 +116,14 @@ class Config {
 				//throw new \Exception('Конфиг не найден '.$src);
 			}
 			$d=file_get_contents($path);
-
-			$d=Load::json_decode($d);
+			try {
+				$d=Load::json_decode($d);
+			}catch(\Exception $e){ }
+			if(!is_array($d)){
+				echo '<pre>';
+				throw new \Exception('Wrong config '.$src);
+			}
 			if ($name) {
-				
 				Config::accept($name, $d);
 			} else {
 				foreach ($d as $k => &$v) {
@@ -119,28 +135,40 @@ class Config {
 	public static function accept($name, $v)
 	{
 		$conf=&Config::$conf;
+		if (!empty($v['dependencies'])) {
+			//Должны быть добавлены в conf ДО $name
+			Each::exec($v['dependencies'], function($s) use ($name) {
+				Config::get($s);
+			});
+			unset($v['dependencies']);
+		}
 		if (empty($conf[$name])) $conf[$name] = array();
+
 		if (!is_array($v)) return;
 		foreach ($v as $kk => $vv) {
 			if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
-			if ($kk == 'require') {
-				Each::exec($vv, function($s) use ($name) {
-					Path::req('-'.$name.'/'.$s);
-				});
-			}else if ($kk == 'conf') {
-				$conf[$name]=array_merge($vv::$conf, $conf[$name]);
-				$vv::$conf=&$conf[$name];
-			}else if ($kk == 'install') {
-				if (Config::$install) Path::req('-'.$name.'/'.$vv);
-			} else {
-				$conf[$name][$kk] = $vv;
-			}
+			$conf[$name][$kk] = $vv;
+		}
+		if(!empty($conf[$name]['install'])){
+			if (Config::$install) Path::req('-'.$name.'/'.$conf[$name]['install']);
+			unset($conf[$name]['install']);
+		}
+		if(!empty($conf[$name]['conf'])){
+			$conf[$name]=array_merge($conf[$name]['conf']::$conf, $conf[$name]);
+			$conf[$name]['conf']::$conf=&$conf[$name];
+			unset($conf[$name]['conf']);
+		}
+		if(!empty($conf[$name]['require'])){
+			Each::exec($conf[$name]['require'], function($s) use ($name) {
+				Path::req('-'.$name.'/'.$s);
+			});
+			unset($conf[$name]['require']);
 		}
 	}
-	private static function pubclean(&$part)
+	private static function pubclean($part)
 	{
 		if (empty($part['pub']))return null;
-		$pub = @$part['pub'];
+		$pub = $part['pub'];
 		foreach ($part as $name => $val) {
 			if (!in_array($name, $pub)) {
 				unset($part[$name]);
@@ -151,16 +179,18 @@ class Config {
 	public static function &pub($plugin = null) 
 	{
 		if ($plugin) {
-			$conf=Config::get($plugin);
-			$conf=Config::pubclean($conf);
-			return $conf;
-		} 
-		$conf=Config::get();
-		foreach ($conf as $i => $part) {
-			$res=pubclean($pub);
-			if ($res) $conf[$i]=$res;
-			else unset($conf[$i]);
+			$conf = Config::get($plugin);
+			$pub = Config::pubclean($conf);
+			return $pub;
 		}
-		return $conf;
+
+		$pub = array();
+
+		$conf = Config::get();
+		foreach ($conf as $i => $part) {
+			$res = Config::pubclean($part);
+			if ($res) $pub[$i]=$res;
+		}
+		return $pub;
 	}
 }
