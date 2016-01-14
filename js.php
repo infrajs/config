@@ -47,7 +47,7 @@ if (!$js || $debug || $re) {
 				echo '<pre>';
 				throw new \Exception('Не найден файл '.$src);
 			}
-			$js.= "\n\n".'//require js '.$src."\n";
+			$js.= "\n\n".'//require js '.$src."\r\n";
 			$js.= Load::loadTEXT($src).';';
 		});
 	}
