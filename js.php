@@ -34,22 +34,10 @@ if (!$js || $debug || $re) {
 	header('Infrajs-Cache: false');
 	$js = 'window.infra={}; window.infrajs={ }; infra.conf=('.Load::json_encode(Config::pub()).'); infra.config=function(){ return infra.conf; };';
 
-
 	$conf=Config::get();
 	foreach($conf as $name=>$c){
-	
+		Config::collectJS($js, $name);
 		
-		if (empty($c['js'])) continue;
-		Each::exec($c['js'], function ($path) use ($name,&$js) {
-
-			$src = '-'.$name.'/'.$path;
-			if(!Path::theme($src)) {
-				echo '<pre>';
-				throw new \Exception('Не найден файл '.$src);
-			}
-			$js.= "\n\n".'//require js '.$src."\r\n";
-			$js.= Load::loadTEXT($src).';';
-		});
 	}
 	
 	if (!$debug) {

@@ -138,9 +138,8 @@ class Config {
 		if (!empty($v['dependencies'])) {
 			//Должны быть добавлены в conf ДО $name
 			Each::exec($v['dependencies'], function($s) use ($name) {
-				Config::get($s);
+				$r=Config::get($s);
 			});
-			unset($v['dependencies']);
 		}
 		if (empty($conf[$name])) $conf[$name] = array();
 
@@ -191,5 +190,28 @@ class Config {
 			if ($res) $pub[$i]=$res;
 		}
 		return $pub;
+	}
+	public static $collected=array();
+	public static function collectJS(&$js, $name)
+	{
+		$c = Config::get($name);
+		if (!empty($c['dependencies'])) {
+			Each::exec($c['dependencies'], function($name) use(&$js){
+				Config::collectJS($js, $name);
+			});
+		}
+		if (empty($c['js'])) return;
+		if (Config::$collected[$name]) return;
+		Config::$collected[$name] = true;
+
+		Each::exec($c['js'], function ($path) use ($name,&$js) {
+			$src = '-'.$name.'/'.$path;
+			if(!Path::theme($src)) {
+				echo '<pre>';
+				throw new \Exception('Не найден файл '.$src);
+			}
+			$js.= "\n\n".'//require js '.$src."\r\n";
+			$js.= Load::loadTEXT($src).';';
+		});
 	}
 }
