@@ -35,6 +35,7 @@ if (!$js || $debug || $re) {
 	$js = 'window.infra={}; window.infrajs={ }; infra.conf=('.Load::json_encode(Config::pub()).'); infra.config=function(){ return infra.conf; };';
 
 	$conf=Config::get();
+
 	foreach($conf as $name=>$c){
 		Config::collectJS($js, $name);
 		

@@ -74,9 +74,16 @@ class Config {
 				$files = scandir($tsrc);
 				foreach($files as $file){
 					if ($file{0} == '.') continue;
-					if (is_file($tsrc.$file)) continue;
+					if (!is_dir($tsrc.$file)) continue;
 					Config::load('-'.$file.'/.infra.json', $file);
 				}
+			}
+			$files = scandir('.');
+			foreach($files as $file){
+				if ($file{0} == '.') continue;
+				if (!is_dir($file)) continue;
+				if (in_array($file.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
+				Config::load('-'.$file.'/.infra.json', $file);
 			}
 			
 		});
@@ -85,11 +92,8 @@ class Config {
 	}
 	public static function &get($name = null)
 	{
-		if (!$name) {
-			$r=static::getAll();
-			return $r;
-			
-		}
+		if (!$name) return static::getAll();
+
 		Config::load('-'.$name.'/.infra.json', $name);
 		
 		if (!isset(Config::$conf[$name])) {
