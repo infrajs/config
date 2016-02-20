@@ -24,7 +24,7 @@ $p = explode(',', str_replace(' ', '', $_SERVER['HTTP_ACCEPT_ENCODING']));
 
 $debug = Access::debug();
 
-$isgzip = !$debug && in_array('gzip', $p);
+$isgzip = !$debug&&!$re && in_array('gzip', $p);
 
 $key = 'Infrajs::Config::js'.$isgzip;
 
