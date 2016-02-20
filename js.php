@@ -24,10 +24,11 @@ $p = explode(',', str_replace(' ', '', $_SERVER['HTTP_ACCEPT_ENCODING']));
 
 $debug = Access::debug();
 
-$isgzip = !$re && !$debug && in_array('gzip', $p);
+//zip ключ для кэша, нельзя в ключ включать $re иначе кэш нельзя очистить.
+$isgzip = !$debug && in_array('gzip', $p);
 
 $key = 'Infrajs::Config::js'.$isgzip;
-
+if ($re) Mem::delete($key);
 $js = Mem::get($key);
 
 if (!$js || $debug || $re) {
