@@ -41,13 +41,13 @@ if (!$js || $debug || $re) {
 		
 	}
 	
-	if (!$debug&&!$re) {
+	
+	if ($isgzip) {
 		$min = new Minify\JS($js);
-		if ($isgzip) {
-			$js = $min->gzip();
-		} else {
-			$js = $min->minify();
-		}
+		$js = $min->gzip();
+	} else if(!$re&&!$debug) {
+		$min = new Minify\JS($js);
+		$js = $min->minify();
 	}
 	Mem::set($key,$js);
 }
