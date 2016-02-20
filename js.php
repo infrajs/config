@@ -24,7 +24,7 @@ $p = explode(',', str_replace(' ', '', $_SERVER['HTTP_ACCEPT_ENCODING']));
 
 $debug = Access::debug();
 
-$isgzip = !$debug&&!$re && in_array('gzip', $p);
+$isgzip = !$debug && in_array('gzip', $p);
 
 $key = 'Infrajs::Config::js'.$isgzip;
 
@@ -41,7 +41,7 @@ if (!$js || $debug || $re) {
 		
 	}
 	
-	if (!$debug) {
+	if (!$debug&&!$re) {
 		$min = new Minify\JS($js);
 		if ($isgzip) {
 			$js = $min->gzip();
