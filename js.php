@@ -16,46 +16,58 @@ if (!is_file('vendor/autoload.php')) {
 }
 Nostore::pub();
 
-header('Infrajs-Cache: true');
+
 
 $re = isset($_GET['re']); //Modified re нужно обновлять с ctrl+F5
+$debug = Access::debug();
+if ($debug || $re) {
+	header('Infrajs-Cache: false');
+	$conf=Config::get();
+	foreach($conf as $name=>$c){
+		Config::collectJS($js, $name);	
+	}
+	$key = 'Infrajs::Config::js'.true;
+	Mem::delete($key);
+	$key = 'Infrajs::Config::js'.false;
+	Mem::delete($key);
+	header('Content-Type: text/javascript; charset=utf-8');
+	echo $js;
+	exit;
+}
+
+
 
 $p = explode(',', str_replace(' ', '', $_SERVER['HTTP_ACCEPT_ENCODING']));
+$isgzip = in_array('gzip', $p);
 
-$debug = Access::debug();
+$key = 'Infrajs::Config::js'.$isgzip; //Два кэша зазипованый и нет. Не все браузеры понимают зазипованую версию.
 
-//zip ключ для кэша, нельзя в ключ включать $re иначе кэш нельзя очистить.
-$isgzip = !$debug && in_array('gzip', $p);
-
-$key = 'Infrajs::Config::js'.$isgzip;
-if ($re) Mem::delete($key);
 $js = Mem::get($key);
 
-if (!$js || $debug || $re) {
+if (!$js) {
 	header('Infrajs-Cache: false');
 	$js = 'window.infra={}; window.infrajs={ }; infra.conf=('.Load::json_encode(Config::pub()).'); infra.config=function(){ return infra.conf; };';
 
 	$conf=Config::get();
-
 	foreach($conf as $name=>$c){
-		Config::collectJS($js, $name);
-		
+		Config::collectJS($js, $name);	
 	}
 	if ($isgzip) {
 		$min = new Minify\JS($js);
 		$js = $min->gzip();
-	} else if(!$re&&!$debug) {
+	} else {
 		$min = new Minify\JS($js);
 		$js = $min->minify();
 	}
+	
 	Mem::set($key, $js);
+} else {
+	header('Infrajs-Cache: true');
 }
-
 if ($isgzip) {
 	header('Content-Encoding: gzip');
 	header('Vary: accept-encoding');
 	header('Content-Length: ' . strlen($js));
 }
-
 header('Content-Type: text/javascript; charset=utf-8');
 echo $js;
