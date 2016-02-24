@@ -9,27 +9,53 @@ use infrajs\once\Once;
 class Config {
 	public static $conf=array();
 	public static $exec=array();
-	public static $install=false;
+	public static $update=false;
+	public static function update()
+	{
+		if (self::$update) return;
+		self::$update = true;
+		$conf = self::$conf;
+		foreach($conf as $name => $v) {
+			if (!empty($conf[$name]['install'])) {
+				Path::req('-'.$name.'/'.$conf[$name]['install']);
+				//unset($conf[$name]['install']);
+			}
+		}
+		self::get();
+	}
 	public static function init()
 	{
+
 		Once::exec('infrajs::Config::init', function() {
 			header('Infrajs-Config-All: false');
+			spl_autoload_register(function($class_name){
+				$p=explode('\\',$class_name);
+				if(sizeof($p)<3) return;
+				$name=$p[1];
+				if(!empty(Config::$exec[$name])) return;
+				if(!Path::theme('-'.$name.'/')) return;
+				Config::$exec[$name]=true;
+				spl_autoload_call($class_name);
+				Config::get($name); //В require мог установиться ключ install
+			}, true, true);
+			set_error_handler(function(){ //bugfix
+				ini_set('display_errors',true);
+			});
 			Config::load('.infra.json');
 			Config::load('~.infra.json');
-
 			Config::get('path');
 			Config::get('config');
 			Config::get('each');
 			Config::get('hash');
+
 			Config::get('once');
 			Config::get('load');
 			Config::get('ans');
-
+			
 			/*
 				echo '<pre>';
 				print_r(get_declared_classes());
 			 	exit;
-			
 				Debug проврить классы каких расширений после композера загружены и в ручную инициализировать их конфиги
 			    [139] => infrajs\path\Path
 			    [140] => infrajs\config\Config
@@ -40,24 +66,9 @@ class Config {
 			    [145] => infrajs\ans\Ans
 
 			*/
-			spl_autoload_register(function($class_name){
-				$p=explode('\\',$class_name);
-				if(sizeof($p)<3) return;
-				$name=$p[1];
-				if(!empty(Config::$exec[$name])) return;
-				if(!Path::theme('-'.$name.'/')) return;
-				Config::$exec[$name]=true;
-				spl_autoload_call($class_name);
-				Config::get($name); //В require мог установиться ключ install
-				if (Config::$install) {
-					Config::get(); //Ключ install Заставляет загрузить все имеющийся расширения, чтобы они установились как надо.
-				}
-			}, true, true);
-			set_error_handler(function(){ //bugfix
-				ini_set('display_errors',true);
-			});
 		});
 	}
+	
 	public static function &getAll()
 	{
 		Once::exec('Infrajs::Config::getAll', function () {
@@ -70,7 +81,6 @@ class Config {
 			 **/
 			$path=Path::$conf;
 			foreach($path['search'] as $tsrc) {
-
 				$files = scandir($tsrc);
 				foreach($files as $file){
 					if ($file{0} == '.') continue;
@@ -113,15 +123,10 @@ class Config {
 		Once::exec('Config::load::'.$src, function () use ($src, $name) {
 			
 			$path = Path::theme($src);
-			if (!$path) {
-				return;
-				//if(!$name) return;
-				//echo '<pre>';
-				//throw new \Exception('Конфиг не найден '.$src);
-			}
-			$d=file_get_contents($path);
+			if (!$path) return;
+			$d = file_get_contents($path);
 			try {
-				$d=Load::json_decode($d);
+				$d = Load::json_decode($d);
 			}catch(\Exception $e){ }
 			if(!is_array($d)){
 				echo '<pre>';
@@ -152,20 +157,21 @@ class Config {
 			if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 			$conf[$name][$kk] = $vv;
 		}
-		if(!empty($conf[$name]['install'])){
-			if (Config::$install) Path::req('-'.$name.'/'.$conf[$name]['install']);
-			unset($conf[$name]['install']);
+		
+		if (Config::$update&&!empty($conf[$name]['install'])) {
+			Path::req('-'.$name.'/'.$conf[$name]['install']);
+			//unset($conf[$name]['install']);
 		}
 		if(!empty($conf[$name]['conf'])){
 			$conf[$name]=array_merge($conf[$name]['conf']::$conf, $conf[$name]);
 			$conf[$name]['conf']::$conf=&$conf[$name];
-			unset($conf[$name]['conf']);
+			//($conf[$name]['conf']);
 		}
 		if(!empty($conf[$name]['require'])){
 			Each::exec($conf[$name]['require'], function($s) use ($name) {
 				Path::req('-'.$name.'/'.$s);
 			});
-			unset($conf[$name]['require']);
+			//unset($conf[$name]['require']);
 		}
 	}
 	private static function pubclean($part)
@@ -194,28 +200,5 @@ class Config {
 			if ($res) $pub[$i]=$res;
 		}
 		return $pub;
-	}
-	public static $collected=array();
-	public static function collectJS(&$js, $name)
-	{
-		$c = Config::get($name);
-		if (!empty($c['dependencies'])) {
-			Each::exec($c['dependencies'], function($name) use(&$js){
-				Config::collectJS($js, $name);
-			});
-		}
-		if (empty($c['js'])) return;
-		if (Config::$collected[$name]) return;
-		Config::$collected[$name] = true;
-
-		Each::exec($c['js'], function ($path) use ($name,&$js) {
-			$src = '-'.$name.'/'.$path;
-			if(!Path::theme($src)) {
-				echo '<pre>';
-				throw new \Exception('Не найден файл '.$src);
-			}
-			$js.= "\n\n".'//require js '.$src."\r\n";
-			$js.= Load::loadTEXT($src).';';
-		});
 	}
 }

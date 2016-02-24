@@ -5,12 +5,9 @@
 		"psr-4": { "infrajs\\config\\": "" }
 	},
 	"require":{
-		"matthiasmullie/minify":"~1",
 		"infrajs/once":"~1",
 		"infrajs/path":"~1",
 		"infrajs/load":"~1",
-		"infrajs/each":"~1",
-		"infrajs/hash":"~1",
-		"infrajs/ans":"~1"
+		"infrajs/each":"~1"
 	}
 }
