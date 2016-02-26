@@ -9,20 +9,7 @@ use infrajs\once\Once;
 class Config {
 	public static $conf=array();
 	public static $exec=array();
-	public static $update=false;
-	public static function update()
-	{
-		if (self::$update) return;
-		self::$update = true;
-		$conf = self::$conf;
-		foreach($conf as $name => $v) {
-			if (!empty($conf[$name]['install'])) {
-				Path::req('-'.$name.'/'.$conf[$name]['install']);
-				//unset($conf[$name]['install']);
-			}
-		}
-		self::get();
-	}
+	
 	public static function init()
 	{
 
@@ -36,10 +23,14 @@ class Config {
 				if(!Path::theme('-'.$name.'/')) return;
 				Config::$exec[$name]=true;
 				spl_autoload_call($class_name);
-				Config::get($name); //В require мог установиться ключ install
+				Config::get($name);
 			}, true, true);
 			set_error_handler(function(){ //bugfix
 				ini_set('display_errors',true);
+			});
+			Config::add('conf', function ($name, $value, &$conf) {
+				$conf=array_merge($value::$conf, $conf); //Второй массив важнее его значения остаются
+				$value::$conf=&$conf;
 			});
 			Config::load('.infra.json');
 			Config::load('~.infra.json');
@@ -141,11 +132,20 @@ class Config {
 			}
 		});
 	}
+	public static $list = array();
+	public static function add($prop, $callback)
+	{
+		self::$list[$prop] = $callback;
+	}
 	public static function accept($name, $v)
 	{
 		$conf=&Config::$conf;
 		if (!empty($v['dependencies'])) {
 			//Должны быть добавлены в conf ДО $name
+			/**
+			 * Используется для порядка загрузки javascript
+			 * 
+			 **/
 			Each::exec($v['dependencies'], function($s) use ($name) {
 				$r=Config::get($s);
 			});
@@ -157,21 +157,16 @@ class Config {
 			if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 			$conf[$name][$kk] = $vv;
 		}
-		
-		if (Config::$update&&!empty($conf[$name]['install'])) {
-			Path::req('-'.$name.'/'.$conf[$name]['install']);
-			//unset($conf[$name]['install']);
-		}
-		if(!empty($conf[$name]['conf'])){
-			$conf[$name]=array_merge($conf[$name]['conf']::$conf, $conf[$name]);
-			$conf[$name]['conf']::$conf=&$conf[$name];
-			//($conf[$name]['conf']);
-		}
+
 		if(!empty($conf[$name]['require'])){
 			Each::exec($conf[$name]['require'], function($s) use ($name) {
 				Path::req('-'.$name.'/'.$s);
 			});
-			//unset($conf[$name]['require']);
+		}
+		foreach (self::$list as $prop => $callback) {
+			if (!empty($conf[$name][$prop])) {
+				$callback($name, $conf[$name][$prop], $conf[$name]);
+			}	
 		}
 	}
 	private static function pubclean($part)

@@ -25,9 +25,7 @@ dependencies:'module' - указывает модуль, который долж
 {
 	"dependencies":"event",
 	"require":"script.php",
-	"js":"script.js",
 	"pub":"propname",
-	"install":"install.php",
 	"conf":"Access::$conf",
 	"testerjs":"test.js" //(Свойство обрабатывается [infrajs/tester](https://github.com/infrajs/tester))
 }
