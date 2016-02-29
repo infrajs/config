@@ -30,3 +30,5 @@ dependencies:'module' - указывает модуль, который долж
 	"testerjs":"test.js" //(Свойство обрабатывается [infrajs/tester](https://github.com/infrajs/tester))
 }
 ```
+
+

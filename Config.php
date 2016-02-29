@@ -157,16 +157,15 @@ class Config {
 			if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 			$conf[$name][$kk] = $vv;
 		}
-
-		if(!empty($conf[$name]['require'])){
-			Each::exec($conf[$name]['require'], function($s) use ($name) {
-				Path::req('-'.$name.'/'.$s);
-			});
-		}
 		foreach (self::$list as $prop => $callback) {
 			if (!empty($conf[$name][$prop])) {
 				$callback($name, $conf[$name][$prop], $conf[$name]);
 			}	
+		}
+		if(!empty($conf[$name]['require'])){
+			Each::exec($conf[$name]['require'], function($s) use ($name) {
+				Path::req('-'.$name.'/'.$s);
+			});
 		}
 	}
 	private static function pubclean($part)
