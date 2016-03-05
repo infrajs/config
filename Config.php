@@ -70,8 +70,11 @@ class Config {
 			 * Папки data может конфликтовать так как она содержит общий конфиг, 
 			 * А если родительская папка защитается за папку с расширениями папка .infra.json в data буде лишним
 			 **/
-			$path=Path::$conf;
-			foreach($path['search'] as $tsrc) {
+			$path = &Path::$conf;
+
+			
+			for($i = 0; $i < sizeof($path['search']); $i++) {
+				$tsrc = $path['search'][$i];
 				$files = scandir($tsrc);
 				foreach($files as $file){
 					if ($file{0} == '.') continue;
@@ -79,6 +82,7 @@ class Config {
 					Config::load('-'.$file.'/.infra.json', $file);
 				}
 			}
+			
 			$files = scandir('.');
 			foreach($files as $file){
 				if ($file{0} == '.') continue;
@@ -86,7 +90,6 @@ class Config {
 				if (in_array($file.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
 				Config::load('-'.$file.'/.infra.json', $file);
 			}
-			
 		});
 		
 		return Config::$conf;
