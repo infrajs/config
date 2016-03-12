@@ -27,6 +27,7 @@ dependencies:'module' - указывает модуль, который долж
 	"require":"script.php",
 	"pub":"propname",
 	"conf":"Access::$conf",
+	"off": false, //true запрещает require
 	"testerjs":"test.js" //(Свойство обрабатывается [infrajs/tester](https://github.com/infrajs/tester))
 }
 ```

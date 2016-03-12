@@ -165,7 +165,7 @@ class Config {
 				$callback($name, $conf[$name][$prop], $conf[$name]);
 			}	
 		}
-		if(!empty($conf[$name]['require'])){
+		if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
 			Each::exec($conf[$name]['require'], function($s) use ($name) {
 				Path::req('-'.$name.'/'.$s);
 			});
