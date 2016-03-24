@@ -15,6 +15,7 @@ class Config {
 
 		Once::exec('infrajs::Config::init', function() {
 			header('Infrajs-Config-All: false');
+			require_once('vendor/infrajs/path/src/Path.php');
 			spl_autoload_register(function($class_name){
 				$p=explode('\\',$class_name);
 				if(sizeof($p)<3) return;
