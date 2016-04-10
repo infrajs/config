@@ -74,10 +74,11 @@ class Config {
 			$path = &Path::$conf;
 
 			
-			for($i = 0; $i < sizeof($path['search']); $i++) {
+			for ($i = 0; $i < sizeof($path['search']); $i++) {
 				$tsrc = $path['search'][$i];
+				if (!is_dir($tsrc)) continue;
 				$files = scandir($tsrc);
-				foreach($files as $file){
+				foreach ($files as $file) {
 					if ($file{0} == '.') continue;
 					if (!is_dir($tsrc.$file)) continue;
 					Config::load('-'.$file.'/.infra.json', $file);
@@ -85,7 +86,7 @@ class Config {
 			}
 			
 			$files = scandir('.');
-			foreach($files as $file){
+			foreach ($files as $file) {
 				if ($file{0} == '.') continue;
 				if (!is_dir($file)) continue;
 				if (in_array($file.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
