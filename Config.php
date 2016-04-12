@@ -71,9 +71,17 @@ class Config {
 			 * Папки data может конфликтовать так как она содержит общий конфиг, 
 			 * А если родительская папка защитается за папку с расширениями папка .infra.json в data буде лишним
 			 **/
-			$path = &Path::$conf;
-
 			
+			
+			$files = scandir('.');
+			foreach ($files as $file) {
+				if ($file{0} == '.') continue;
+				if (!is_dir($file)) continue;
+				if (in_array($file.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
+				Config::load($tsrc.$file.'/.infra.json', $file);
+			}
+
+			$path = &Path::$conf;
 			for ($i = 0; $i < sizeof($path['search']); $i++) {
 				$tsrc = $path['search'][$i];
 				if (!is_dir($tsrc)) continue;
@@ -84,14 +92,6 @@ class Config {
 					Config::load($tsrc.$file.'/.infra.json', $file);
 				}
 			}
-			
-			$files = scandir('.');
-			foreach ($files as $file) {
-				if ($file{0} == '.') continue;
-				if (!is_dir($file)) continue;
-				if (in_array($file.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
-				Config::load($tsrc.$file.'/.infra.json', $file);
-			}
 		});
 		
 		return Config::$conf;
@@ -100,10 +100,14 @@ class Config {
 	{
 		if (!$name) return static::getAll();
 
-		Config::load('-'.$name.'/.infra.json', $name);
+		Config::load($name.'/.infra.json', $name);
+		foreach(Path::$conf['search'] as $dir) {
+			Config::load($dir.$name.'/.infra.json', $name);	
+		}
+		
 		
 		if (!isset(Config::$conf[$name])) {
-			$r=null;
+			$r = array();
 			return $r;
 		}
 		return Config::$conf[$name];
