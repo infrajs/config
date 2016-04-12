@@ -81,7 +81,7 @@ class Config {
 				foreach ($files as $file) {
 					if ($file{0} == '.') continue;
 					if (!is_dir($tsrc.$file)) continue;
-					Config::load('-'.$file.'/.infra.json', $file);
+					Config::load($tsrc.$file.'/.infra.json', $file);
 				}
 			}
 			
@@ -90,7 +90,7 @@ class Config {
 				if ($file{0} == '.') continue;
 				if (!is_dir($file)) continue;
 				if (in_array($file.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
-				Config::load('-'.$file.'/.infra.json', $file);
+				Config::load($tsrc.$file.'/.infra.json', $file);
 			}
 		});
 		
@@ -116,11 +116,11 @@ class Config {
 	}
 	public static function load($src, $name = null)
 	{
+		$src = Path::theme($src);
+		if (!$src) return;
 		Once::exec('Config::load::'.$src, function () use ($src, $name) {
 			
-			$path = Path::theme($src);
-			if (!$path) return;
-			$d = file_get_contents($path);
+			$d = file_get_contents($src);
 			try {
 				$d = Load::json_decode($d);
 			}catch(\Exception $e){ }
