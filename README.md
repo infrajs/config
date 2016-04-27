@@ -20,7 +20,7 @@
 ```
 В php затем обращаемся к этим параметрам.
 ```php
-use infrajs/config/Config;
+use infrajs\config\Config;
 
 $conf = Config::get('имя расширения');
 echo $conf['name']; //Лёха
