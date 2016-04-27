@@ -1,35 +1,53 @@
 # Система конфигурирования .infra.json
 **Disclaimer:** Module is not complete and not ready for use yet.
 
-dependencies:'module' - указывает модуль, который должен быть загружен "до". Для php не требуется так как зависимости подключатся при обращении к калссу через autoload. Используется если доступ к модулю осуществляется в js в первом потоке выполнения. Во вложенных вызовах всё в любом случае будет доступно и указывать dependencies не требуется. Секция конфига dependencies будет располагаться до секции конфига указавшего эту зависимость модуля. При всех пробежках сначало будет обработка dependencies и только потом модуля указавшего эту зависимость.
+## Установка через composer
 
-# use
-```html
-<head>
-	<script async defer src="/-config/js.php"></script>
-</head>
-<body>
-	...
-	<script>
-		window.addEventListener('load', function () { //if jquery in .infra.json you can't use $(function() {...
-			alert('use infrajs or any loaded scripts like jquery');
-		});
-	</script>
-	...
-</body>
+```json
+{
+	"reqiure":{
+		"infrajs/config":"~1"
+	}
+}
 ```
 
-# infra.json
+## Использование
+В папке расширения в vendor или в подпапке проекта или в корне проекта создаётся файл **.infra.json** в который выносятся параметры
+```json
+{
+	"name":"Лёха"
+}
+```
+В php затем обращаемся к этим параметрам.
+```php
+use infrajs/config/Config;
 
+$conf = Config::get('имя расширения');
+echo $conf['name']; //Лёха
+```
+Имя расширения совпадает с имененм папки или с ключём в корневом конфиге
+
+
+## Специальные значения свойств в .infra.json
 ```json
 {
 	"dependencies":"event",
 	"require":"script.php",
 	"pub":"propname",
 	"conf":"Access::$conf",
-	"off": false, //true запрещает require
-	"testerjs":"test.js" //(Свойство обрабатывается [infrajs/tester](https://github.com/infrajs/tester))
+	"off": false, 		
+	"js": "path/to/js",  	
+	"tester":"test.php", 	
+	"testerjs":"test.js" 	
 }
 ```
+## Порядок выполнения dependencies
+dependencies:'module' - указывает модуль, который должен быть загружен "до". Для php не требуется так как зависимости подключатся при обращении к калссу через autoload. Используется если доступ к модулю осуществляется в js в первом потоке выполнения. Во вложенных вызовах всё в любом случае будет доступно и указывать dependencies не требуется. Секция конфига dependencies будет располагаться до секции конфига указавшего эту зависимость модуля. При всех пробежках сначало будет обработка dependencies и только потом модуля указавшего эту зависимость.
 
+## Параметр off
+По умолчанию false. true запрещает require и js
+## Параметр js
+Путь до javascript файлов. Свойство обрабатывается [infrajs/collect](https://github.com/infrajs/collect)
+## Параметр tester и testerjs
+Свойство обрабатывается [infrajs/tester](https://github.com/infrajs/tester)
 
