@@ -7,14 +7,12 @@ use infrajs\once\Once;
 
 
 class Config {
-	public static $conf=array();
-	public static $exec=array();
-	
-	public static function init()
+	public static $conf = array();
+	public static $exec = array();
+	public static function init ()
 	{
-
-		Once::exec('infrajs::Config::init', function() {
-			header('Infrajs-Config-All: false');
+		Once::exec(__FILE__.'::init', function() {
+			@header('Infrajs-Config-All: false');
 			require_once('vendor/infrajs/path/src/Path.php');
 			spl_autoload_register(function($class_name){
 				$p=explode('\\',$class_name);
@@ -64,7 +62,8 @@ class Config {
 	public static function &getAll()
 	{
 		Once::exec('Infrajs::Config::getAll', function () {
-			header('Infrajs-Config-All: true');
+			Config::init();
+			@header('Infrajs-Config-All: true');
 			/**
 			 * Для того чтобы в текущем сайте можно было разрабатывать расширения со своим конфигом, 
 			 * нужно добавить путь до родительской папки с расширениями в path.config.search
@@ -98,19 +97,19 @@ class Config {
 	}
 	public static function &get($name = null)
 	{
-		if (!$name) return static::getAll();
-
-		Config::load($name.'/.infra.json', $name);
-		foreach(Path::$conf['search'] as $dir) {
-			Config::load($dir.$name.'/.infra.json', $name);	
-		}
-		
-		
-		if (!isset(Config::$conf[$name])) {
-			$r = array();
-			return $r;
-		}
-		return Config::$conf[$name];
+		if (!$name) return Config::getAll();
+		return Once::exec(__FILE__.'::get'.$name, function () use ($name) {
+			Config::init();
+			Config::load($name.'/.infra.json', $name);
+			foreach(Path::$conf['search'] as $dir) {
+				Config::load($dir.$name.'/.infra.json', $name);	
+			}
+			if (!isset(Config::$conf[$name])) {
+				$r = array();
+				return $r;
+			}
+			return Config::$conf[$name];
+		});
 	}
 	public static function reqsrc($src)
 	{
