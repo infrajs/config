@@ -13,7 +13,7 @@ class Config {
 	{
 		Once::exec(__FILE__.'::init', function() {
 			@header('Infrajs-Config-All: false');
-			require_once('vendor/infrajs/path/src/Path.php');
+			require_once('vendor/infrajs/path/Path.php');
 			spl_autoload_register(function($class_name){
 				$p=explode('\\',$class_name);
 				if(sizeof($p)<3) return;
@@ -97,10 +97,16 @@ class Config {
 	}
 	public static function &get($name = null)
 	{
+		
 		if (!$name) return Config::getAll();
+
 		return Once::exec(__FILE__.'::get'.$name, function () use ($name) {
+
 			Config::init();
+
+
 			Config::load($name.'/.infra.json', $name);
+
 			foreach(Path::$conf['search'] as $dir) {
 				Config::load($dir.$name.'/.infra.json', $name);	
 			}
@@ -108,6 +114,7 @@ class Config {
 				$r = array();
 				return $r;
 			}
+
 			return Config::$conf[$name];
 		});
 	}
@@ -118,7 +125,7 @@ class Config {
 		});
 	}
 	public static function load($src, $name = null)
-	{
+	{	
 		$src = Path::theme($src);
 		if (!$src) return;
 		Once::exec('Config::load::'.$src, function () use ($src, $name) {
