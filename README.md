@@ -1,5 +1,6 @@
 # Система конфигурирования .infra.json
 **Disclaimer:** Module is not complete and not ready for use yet.
+
 Для автоматической поддержки сторонних вендоров, кроме infrajs нужно использовать расширение [infrajs/config-search](https://github.com/infrajs/config-search)
 
 ## Установка через composer
