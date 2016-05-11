@@ -17,7 +17,14 @@ class Config {
 			spl_autoload_register(function($class_name){
 				$p=explode('\\',$class_name);
 				if(sizeof($p)<3) return;
-				$name=$p[1];
+				
+				//Ситуация с именем расширения
+				//infrajs/path/Path - path
+				//infrajs/config/search/Search - config-search
+				array_shift($p);
+				array_pop($p);
+				$name = implode('-', $p);
+				
 				if(!empty(Config::$exec[$name])) return;
 				if(!Path::theme('-'.$name.'/')) return;
 				Config::$exec[$name]=true;
@@ -100,7 +107,7 @@ class Config {
 		
 		if (!$name) return Config::getAll();
 
-		return Once::exec(__FILE__.'::get'.$name, function () use ($name) {
+		Once::exec(__FILE__.'::get'.$name, function () use ($name) {
 
 			Config::init();
 
@@ -114,9 +121,8 @@ class Config {
 				$r = array();
 				return $r;
 			}
-
-			return Config::$conf[$name];
 		});
+		return Config::$conf[$name];
 	}
 	public static function reqsrc($src)
 	{
