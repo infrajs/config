@@ -35,7 +35,10 @@ class Config {
 				ini_set('display_errors',true);
 			});
 			Config::add('conf', function ($name, $value, &$conf) {
-				$conf=array_merge($value::$conf, $conf); //Второй массив важнее его значения остаются
+				$valconf = $value::$conf;
+				foreach ($conf as $k=>$v) $valconf[$k]=$v; //merge нужно делать с сохранением ключей, даже для числовых ключей
+				$conf = $valconf;
+				//$conf=array_merge($value::$conf, $conf); //Второй массив важнее его значения остаются
 				$value::$conf=&$conf;
 			});
 			Config::load('.infra.json');
@@ -178,16 +181,19 @@ class Config {
 			if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 			$conf[$name][$kk] = $vv;
 		}
+
 		foreach (self::$list as $prop => $callback) {
 			if (!empty($conf[$name][$prop])) {
 				$callback($name, $conf[$name][$prop], $conf[$name]);
 			}	
 		}
+
 		if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
 			Each::exec($conf[$name]['require'], function($s) use ($name) {
 				Path::req('-'.$name.'/'.$s);
 			});
 		}
+		
 	}
 	private static function pubclean($part)
 	{
