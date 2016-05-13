@@ -14,25 +14,38 @@ class Config {
 		Once::exec(__FILE__.'::init', function() {
 			@header('Infrajs-Config-All: false');
 			require_once('vendor/infrajs/path/Path.php');
-			spl_autoload_register(function($class_name){
-				$p=explode('\\',$class_name);
-				if(sizeof($p)<3) return;
+			spl_autoload_register( function ($class_name) {
+				$p = explode('\\', $class_name);
+				if (sizeof($p)<3) return;
 				
+				//Ищем имя расширения по переданному полному адресу до Класса
 				//Ситуация с именем расширения
 				//infrajs/path/Path - path
+				//infrajs/path/src/URN - path
 				//infrajs/config/search/Search - config-search
 				array_shift($p);
-				array_pop($p);
-				$name = implode('-', $p);
-				
-				if(!empty(Config::$exec[$name])) return;
-				if(!Path::theme('-'.$name.'/')) return;
-				Config::$exec[$name]=true;
+				//path/Path - path
+				//path/src/URN - path
+				//config/search/Search - config-search
+				do {
+					array_pop($p);
+					//path - path
+					//path/src - path - найдём во втророй интерации
+					//config/search - config-search - найдём в первой интерации
+					$name = implode('-', $p);
+					if (Path::theme('-'.$name.'/')) break;
+				} while (sizeof($p)>1);
+
+				if (!empty(Config::$exec[$name])) return;
+				if (!Path::theme('-'.$name.'/')) return;
+				Config::$exec[$name] = true;
+
 				spl_autoload_call($class_name);
-				Config::get($name);
+
+				Config::get($name); // <- Всё ради автоматического этого
 			}, true, true);
-			set_error_handler(function(){ //bugfix
-				ini_set('display_errors',true);
+			set_error_handler( function () { //bugfix
+				ini_set('display_errors', true);
 			});
 			Config::add('conf', function ($name, $value, &$conf) {
 				$valconf = $value::$conf;
