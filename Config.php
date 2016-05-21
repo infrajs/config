@@ -23,10 +23,11 @@ class Config {
 				//infrajs/path/Path - path
 				//infrajs/path/src/URN - path
 				//infrajs/config/search/Search - config-search
-				array_shift($p);
 				//path/Path - path
 				//path/src/URN - path
 				//config/search/Search - config-search
+
+				array_shift($p);
 				do {
 					array_pop($p);
 					//path - path
@@ -39,7 +40,7 @@ class Config {
 				if (!empty(Config::$exec[$name])) return;
 				if (!Path::theme('-'.$name.'/')) return;
 				Config::$exec[$name] = true;
-
+				
 				spl_autoload_call($class_name);
 
 				Config::get($name); // <- Всё ради автоматического этого
@@ -56,28 +57,27 @@ class Config {
 			});
 			Config::load('.infra.json');
 			Config::load('~.infra.json');
+
 			Config::get('path');
 			Config::get('config');
 			Config::get('each');
 			Config::get('hash');
-
 			Config::get('once');
 			Config::get('load');
 			Config::get('ans');
 			
-			/*
+			/* 
 				echo '<pre>';
 				print_r(get_declared_classes());
-			 	exit;
+				exit;
 				Debug проврить классы каких расширений после композера загружены и в ручную инициализировать их конфиги
-			    [139] => infrajs\path\Path
-			    [140] => infrajs\config\Config
-			    [141] => infrajs\once\Once
-			    [142] => infrajs\hash\Hash
-			    [143] => infrajs\load\Load
-			    [144] => infrajs\each\Each
-			    [145] => infrajs\ans\Ans
-
+			    [132] => infrajs\config\Config
+				[133] => infrajs\once\Once
+				[134] => infrajs\hash\Hash
+				[135] => infrajs\path\Path
+				[136] => infrajs\load\Load
+				[137] => infrajs\each\Each
+				[138] => infrajs\ans\Ans
 			*/
 		});
 	}
