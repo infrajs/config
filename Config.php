@@ -9,6 +9,7 @@ use infrajs\once\Once;
 class Config {
 	public static $conf = array();
 	public static $exec = array();
+	public static $all = false; //флаг, что собраны все конфиги
 	public static function init ()
 	{
 		Once::exec(__FILE__.'::init', function() {
@@ -84,6 +85,7 @@ class Config {
 	
 	public static function &getAll()
 	{
+		Config::$all = true;
 		Once::exec('Infrajs::Config::getAll', function () {
 			Config::init();
 			@header('Infrajs-Config-All: true');
