@@ -17,7 +17,7 @@ class Config {
 			require_once('vendor/infrajs/path/Path.php');
 			spl_autoload_register( function ($class_name) {
 				$p = explode('\\', $class_name);
-				if (sizeof($p)<3) return;
+				if (sizeof($p) < 3) return;
 				
 				//Ищем имя расширения по переданному полному адресу до Класса
 				//Ситуация с именем расширения
@@ -55,6 +55,18 @@ class Config {
 				$conf = $valconf;
 				//$conf=array_merge($value::$conf, $conf); //Второй массив важнее его значения остаются
 				$value::$conf=&$conf;
+			});
+			Config::add('clutch', function ($name, $value, &$conf) { 
+				//Имя расширения в котором найдено свойство, значение, весь конфиг того расширения
+				//$dir = Path::theme('-'.$name.'/');
+				foreach ($value as $plugin => $paths) {
+					Each::exec($paths, function ($dir) use ($plugin, &$conf) {
+						if (empty(Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin] = [];
+						if (!in_array($dir, Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin][] = $dir;
+						Config::load($dir.$plugin.'/.infra.json', $plugin);
+					});
+				}
+				//Path::$conf['clutch'][] = $value;
 			});
 			Config::load('.infra.json');
 			Config::load('~.infra.json');
