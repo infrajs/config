@@ -71,6 +71,9 @@ class Config {
 			Config::load('.infra.json');
 			Config::load('~.infra.json');
 
+			//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обраотку нового расширения. Для clutch
+			Config::load('!.infra.json');
+
 			Config::get('path');
 			Config::get('config');
 			Config::get('each');
