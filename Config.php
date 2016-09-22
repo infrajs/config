@@ -248,7 +248,7 @@ class Config {
 		$conf = Config::get();
 		foreach ($conf as $i => $part) {
 			$res = Config::pubclean($part);
-			if ($res) $pub[$i]=$res;
+			if (!is_null($res)) $pub[$i]=$res;
 		}
 		return $pub;
 	}
