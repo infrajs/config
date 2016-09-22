@@ -11,7 +11,8 @@ if (!is_file('vendor/autoload.php')) {
 }
 
 
-$js = 'if (!window.infra) window.infra={}; if (!window.infrajs) window.infrajs={}; infra.conf=('.Load::json_encode(Config::pub()).'); infra.config=function(name){ if(!name)return infra.conf; return infra.conf[name] };';
+$js = 'if (!window.infra) window.infra={}; if (!window.infrajs) window.infrajs={}; infra.conf=('.Load::json_encode(Config::pub()).'); ';
+$js .= 'infra.config = function (name){ if(!name)return infra.conf; if (infra.conf[name]) return infra.conf[name]; return {}; };';
 $js .= 'window.Config = {}; Config.get = infra.config; Config.conf = infra.conf;';
 
 
