@@ -36,7 +36,7 @@ echo $conf['name']; //Лёха
 	"dependencies":"event",
 	"require":"script.php",
 	"pub":"propname",
-	"conf":"infrajs\\access\\Access::$conf",
+	"conf":"infrajs\\access\\Access",
 	"off": false, 		
 	"js": "path/to/js",  	
 	"tester":"test.php", 	
