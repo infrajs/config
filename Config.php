@@ -23,32 +23,31 @@ class Config {
 				//Ситуация с именем расширения
 				//infrajs/path/Path - path
 				//infrajs/path/src/URN - path
-				//infrajs/config/search/Search - config-search
+				//infrajs/config/search/Search - config-search Search
+				//infrajs/config/search/Search - config search/Search
+				//infrajs/config/Search - config src/Search
 				//path/Path - path
 				//path/src/URN - path
 				//config/search/Search - config-search
 
-				array_shift($p);
-				do {
+				$vendor = array_shift($p);
+				$class = array_pop($p);
+				$name = implode('-',$p);
+				while (!Path::theme('-'.$name.'/') && sizeof($p)>1) {
 					array_pop($p);
-					//path - path
-					//path/src - path - найдём во втророй интерации
-					//config/search - config-search - найдём в первой интерации
-					$name = implode('-', $p);
-					if (Path::theme('-'.$name.'/')) break;
-				} while (sizeof($p)>1);
-
+					$name = implode('-',$p);
+				}
 				if (!empty(Config::$exec[$name])) return;
 				if (!Path::theme('-'.$name.'/')) return;
 				Config::$exec[$name] = true;
-				
-				spl_autoload_call($class_name);
 
+				spl_autoload_call($class_name);
+				
 				Config::get($name); // <- Всё ради автоматического этого
 			}, true, true);
-			set_error_handler( function () { //bugfix
-				ini_set('display_errors', true);
-			});
+			//set_error_handler( function () { //bugfix
+			//	ini_set('display_errors', true);
+			//});
 			Config::add('conf', function ($name, $value, &$conf) {
 				$valconf = $value::$conf;
 				foreach ($conf as $k=>$v) $valconf[$k]=$v; //merge нужно делать с сохранением ключей, даже для числовых ключей
@@ -60,10 +59,11 @@ class Config {
 				//Имя расширения в котором найдено свойство, значение, весь конфиг того расширения
 				//$dir = Path::theme('-'.$name.'/');
 				foreach ($value as $plugin => $paths) {
-					Each::exec($paths, function ($dir) use ($plugin, &$conf) {
+					Each::exec($paths, function &($dir) use ($plugin, &$conf) {
 						if (empty(Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin] = [];
 						if (!in_array($dir, Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin][] = $dir;
 						Config::load($dir.$plugin.'/.infra.json', $plugin);
+						$r = null; return $r;
 					});
 				}
 				//Path::$conf['clutch'][] = $value;
@@ -117,7 +117,7 @@ class Config {
 				if ($file{0} == '.') continue;
 				if (!is_dir($file)) continue;
 				if (in_array($file.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
-				Config::load($tsrc.$file.'/.infra.json', $file);
+				Config::load($file.'/.infra.json', $file);
 			}
 
 			$path = &Path::$conf;
@@ -141,8 +141,9 @@ class Config {
 		if (!$name) return Config::getAll();
 
 		Once::exec(__FILE__.'::get'.$name, function () use ($name) {
-
+			
 			Config::init();
+
 
 
 			Config::load($name.'/.infra.json', $name);
@@ -154,13 +155,15 @@ class Config {
 				$r = array();
 				return $r;
 			}
+
 		});
 		return Config::$conf[$name];
 	}
 	public static function reqsrc($src)
 	{
-		Each::exec($src, function ($src){
+		Each::exec($src, function &($src){
 			Path::req($src);
+			$r = null; return $r;
 		});
 	}
 	public static function load($src, $name = null)
@@ -200,8 +203,10 @@ class Config {
 			 * Используется для порядка загрузки javascript
 			 * 
 			 **/
-			Each::exec($v['dependencies'], function($s) use ($name) {
-				$r=Config::get($s);
+			Each::exec($v['dependencies'], function &($s) use ($name) {
+				Config::get($s);
+				$r = null; 
+				return $r;
 			});
 		}
 		if (empty($conf[$name])) $conf[$name] = array();
@@ -219,8 +224,9 @@ class Config {
 		}
 
 		if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
-			Each::exec($conf[$name]['require'], function($s) use ($name) {
+			Each::exec($conf[$name]['require'], function &($s) use ($name) {
 				Path::req('-'.$name.'/'.$s);
+				$r = null; return $r;
 			});
 		}
 		
@@ -229,9 +235,11 @@ class Config {
 	{
 		if (empty($part['pub'])) return null;
 		$newpart = array();
-		Each::exec($part['pub'], function ($pub) use (&$newpart, &$part) {
-			if (!isset($part[$pub])) return;
-			$newpart[$pub]=$part[$pub];
+		Each::exec($part['pub'], function &($pub) use (&$newpart, &$part) {
+			$r = null; 
+			if (!isset($part[$pub])) return $r;
+			$newpart[$pub] = $part[$pub];
+			return $r;
 		});
 		return $newpart;
 	}
