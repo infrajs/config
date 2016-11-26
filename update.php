@@ -9,7 +9,7 @@ $conf = Config::get();
 
 $sys = array();
 foreach ($conf as $name => $c) {
-	if($c['clutch']) {
+	if(!empty($c['clutch'])) {
 		$sys[$name] = array();
 		$sys[$name]['clutch'] = $c['clutch'];
 	}
