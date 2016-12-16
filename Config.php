@@ -68,9 +68,11 @@ class Config {
 				}
 				//Path::$conf['clutch'][] = $value;
 			});
+			
 			Config::load('.infra.json');
+			
 			Config::load('~.infra.json');
-
+			
 			//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обраотку нового расширения. Для clutch
 			Config::load('!.infra.json');
 
@@ -187,6 +189,7 @@ class Config {
 					Config::accept($k, $v);
 				}
 			}
+
 		});
 	}
 	public static $list = array();
