@@ -9,10 +9,59 @@ use infrajs\once\Once;
 class Config {
 	public static $conf = array();
 	public static $exec = array();
+	public static $sys = array(); //Генерируемый конфиг в cache
 	public static $all = false; //флаг, что собраны все конфиги
 	public static function init ()
 	{
 		Once::exec(__FILE__.'::init', function() {
+			
+			Config::add('conf', function ($name, $value, &$conf) {
+				$valconf = $value::$conf;
+				foreach ($conf as $k=>$v) $valconf[$k]=$v; //merge нужно делать с сохранением ключей, даже для числовых ключей
+				$conf = $valconf;
+				//$conf=array_merge($value::$conf, $conf); //Второй массив важнее его значения остаются
+				$value::$conf=&$conf;
+			});
+			/*Config::add('clutch', function ($name, $value, &$conf) { 
+				//Имя расширения в котором найдено свойство, значение, весь конфиг того расширения
+				//$dir = Path::theme('-'.$name.'/');
+				foreach ($value as $plugin => $paths) {
+					Each::exec($paths, function &($dir) use ($plugin, &$conf) {
+						if (empty(Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin] = [];
+
+						//Все clutch складываем в Path
+						if (!in_array($dir, Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin][] = $dir;
+						Config::load($dir.$plugin.'/.infra.json', $plugin);
+						$r = null; return $r;
+					});
+				}
+				//Path::$conf['clutch'][] = $value;
+			});*/
+			
+			
+
+			Config::get('path');
+			Config::get('config');
+			Config::get('each');
+			Config::get('hash');
+			Config::get('once');
+			Config::get('load');
+			Config::get('ans');
+			
+			/* 
+				echo '<pre>';
+				print_r(get_declared_classes());
+				exit;
+				Debug проврить классы каких расширений после композера загружены и в ручную инициализировать их конфиги
+			    [132] => infrajs\config\Config
+				[133] => infrajs\once\Once
+				[134] => infrajs\hash\Hash
+				[135] => infrajs\path\Path
+				[136] => infrajs\load\Load
+				[137] => infrajs\each\Each
+				[138] => infrajs\ans\Ans
+			*/
+
 			@header('Infrajs-Config-All: false');
 			require_once('vendor/infrajs/path/Path.php');
 			spl_autoload_register( function ($class_name) {
@@ -48,60 +97,116 @@ class Config {
 			//set_error_handler( function () { //bugfix
 			//	ini_set('display_errors', true);
 			//});
-			Config::add('conf', function ($name, $value, &$conf) {
-				$valconf = $value::$conf;
-				foreach ($conf as $k=>$v) $valconf[$k]=$v; //merge нужно делать с сохранением ключей, даже для числовых ключей
-				$conf = $valconf;
-				//$conf=array_merge($value::$conf, $conf); //Второй массив важнее его значения остаются
-				$value::$conf=&$conf;
-			});
-			Config::add('clutch', function ($name, $value, &$conf) { 
-				//Имя расширения в котором найдено свойство, значение, весь конфиг того расширения
-				//$dir = Path::theme('-'.$name.'/');
-				foreach ($value as $plugin => $paths) {
-					Each::exec($paths, function &($dir) use ($plugin, &$conf) {
-						if (empty(Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin] = [];
-						if (!in_array($dir, Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin][] = $dir;
-						Config::load($dir.$plugin.'/.infra.json', $plugin);
-						$r = null; return $r;
-					});
-				}
-				//Path::$conf['clutch'][] = $value;
-			});
-			
+
 			Config::load('.infra.json');
 			
 			Config::load('~.infra.json');
 			
 			//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обраотку нового расширения. Для clutch
 			Config::load('!.infra.json');
-
-			Config::get('path');
-			Config::get('config');
-			Config::get('each');
-			Config::get('hash');
-			Config::get('once');
-			Config::get('load');
-			Config::get('ans');
 			
-			/* 
-				echo '<pre>';
-				print_r(get_declared_classes());
-				exit;
-				Debug проврить классы каких расширений после композера загружены и в ручную инициализировать их конфиги
-			    [132] => infrajs\config\Config
-				[133] => infrajs\once\Once
-				[134] => infrajs\hash\Hash
-				[135] => infrajs\path\Path
-				[136] => infrajs\load\Load
-				[137] => infrajs\each\Each
-				[138] => infrajs\ans\Ans
-			*/
+
+		
+			
 		});
 	}
-	
+	public static function search ()
+	{
+		//Используется в update.php
+		//Заполнять Path::$conf['search'] нужно после того как пройдёт инициализация конфигов .infra.json
+		//Чтобы значения по умолчанию не заменили сгенерированные значения
+		$search = array();
+		$ex = array_merge(array(Path::$conf['cache'], Path::$conf['data']), Path::$conf['search']);
+		Config::scan('', function ($src, $level) use (&$search, $ex){
+			if (in_array($src, $ex)) return true; //вглубь не идём
+
+			if ($level <= 2) return;
+			if ($level >= 3) return true;
+			if (!is_file($src.'.infra.json')) return;
+			$r = explode('/', $src);
+			array_pop($r);
+			array_pop($r);
+			
+			$search[] = implode('/',$r).'/';
+			return false; //вглубь не идём и в соседние папки тоже
+		});
+		$search = array_values(array_unique(array_merge(Path::$conf['search'], $search)));
+		return $search;
+		
+
+		/*if (Config::$all) { //Если все конфиги были уже обраны, нужно заного пробежаться по найденным
+			for ($i = 0; $i < sizeof($search); $i++) {
+				$tsrc = $search[$i];
+				if (!is_dir($tsrc)) continue;
+				$files = scandir($tsrc);
+				foreach ($files as $file) {
+					if ($file{0} == '.') continue;
+					if (!is_dir($tsrc.$file)) continue;
+					Config::load($tsrc.$file.'/.infra.json', $file);
+				}
+			}
+		}
+		/*$comp = Load::loadJSON('composer.json');
+		if ($comp && !empty($comp['require'])) {	
+			foreach ($comp['require'] as $n => $v) {
+				$r = explode('/', $n);
+				
+				if (sizeof($r) != 2) continue;
+				$path = 'vendor/'.$r[0].'/';
+				if (!in_array($path, Path::$conf['search'])){
+					Path::$conf['search'][] = $path;
+				}
+			}
+		}*/
+	}
+	/**
+	 * Рекурсивный скан папки
+	 * Функция $fn($src, $level) может возвращать управляющие данные
+	 * null - идём дальше и вглубь и в ширь
+	 * true - вглубь не идём, в ширь идём - переход к соседней папке
+	 * false - вглубь не идём, в ширь не идём - выход на уровень выше
+	 **/
+	public static function scan($idir, $fn, $takefiles = false, $level = 0)
+	{
+
+		$src = Path::theme($idir);
+		if (!$idir) $src = './';
+		$d = opendir($src);
+		$r = null;
+		while ($file = readdir($d)) {
+
+			if ($file{0}=='.') continue;
+			$dir = $idir.Path::toutf($file);
+			$isdir = is_dir($src.$file);
+			if ($isdir) {
+				$dir = $dir.'/';
+				$file = $file.'/';
+			}
+
+			if ($takefiles && !$isdir || !$takefiles && $isdir) {
+				$r = $fn($dir, $level);
+				if ($r === true) {
+					$r = null;
+					continue;
+				} 
+				if ($r === false) {
+					$r = null;
+					break;
+				}
+				if (!is_null($r)) break;
+			}
+
+			if ($isdir) {
+				$r = static::scan($dir, $fn, $takefiles, $level + 1);
+				if (!is_null($r)) break; 
+			}
+		}
+		closedir($d);
+		return $r;
+	}
 	public static function &getAll()
 	{
+
 		Config::$all = true;
 		Once::exec('Infrajs::Config::getAll', function () {
 			Config::init();
@@ -115,49 +220,108 @@ class Config {
 			
 			
 			$files = scandir('.');
-			foreach ($files as $file) {
-				if ($file{0} == '.') continue;
-				if (!is_dir($file)) continue;
-				if (in_array($file.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
-				Config::load($file.'/.infra.json', $file);
+			foreach ($files as $name) {
+				if ($name{0} == '.') continue;
+				if (!is_dir($name)) continue;
+				if (in_array($name.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
+				Config::load($name.'/.infra.json', $name);
 			}
 
-			$path = &Path::$conf;
+			$path = Path::$conf;
 			for ($i = 0; $i < sizeof($path['search']); $i++) {
 				$tsrc = $path['search'][$i];
 				if (!is_dir($tsrc)) continue;
 				$files = scandir($tsrc);
-				foreach ($files as $file) {
-					if ($file{0} == '.') continue;
-					if (!is_dir($tsrc.$file)) continue;
-					Config::load($tsrc.$file.'/.infra.json', $file);
+				foreach ($files as $name) {
+					if ($name{0} == '.') continue;
+					if (!is_dir($tsrc.$name)) continue;
+					Config::load($tsrc.$name.'/.infra.json', $name);
 				}
 			}
+			/*foreach($path['clutch'] as $name => $val) {
+				for ($i = 0; $i < sizeof($path['clutch'][$name]); $i++) {
+					$tsrc = $path['clutch'][$name][$i];
+					Config::load($tsrc.$name.'/'.'.infra.json', $name);
+				}
+			}*/
+			foreach (Config::$conf as $name => $conf) {
+				if ($name == 'path') continue;
+				if (empty($conf['clutch'])) continue;
+				foreach ($conf['clutch'] as $child => $val) {
+					Each::exec($val, function &($src) use ($child) {
+						$r = null;
+						Config::load($src.$child.'/'.'.infra.json', $child);
+						return $r;
+					});
+				}
+			}	
+			
 		});
-		
+		foreach (Config::$conf as $name => $val) {
+			Config::get($name);
+		}
 		return Config::$conf;
 	}
 	public static function &get($name = null)
 	{
 		
 		if (!$name) return Config::getAll();
-
 		Once::exec(__FILE__.'::get'.$name, function () use ($name) {
 			
 			Config::init();
 
-
-
 			Config::load($name.'/.infra.json', $name);
+			//Config::load('index/'.$name.'/.infra.json', $name);
 
-			foreach(Path::$conf['search'] as $dir) {
+			foreach (Path::$conf['search'] as $dir) {
 				Config::load($dir.$name.'/.infra.json', $name);	
 			}
-			if (!isset(Config::$conf[$name])) {
+			if (isset(Path::$conf['clutch'][$name])) {
+				Each::exec(Path::$conf['clutch'][$name], function &($src) use ($name) {
+					$r = null;
+					Config::load($src.$name.'/'.'.infra.json', $name);
+					return $r;
+				});
+			}
+			
+
+			$conf = &Config::$conf;
+			if (!isset($conf[$name])) {
 				$r = array();
 				return $r;
 			}
 
+			/*if (!empty($conf[$name]['clutch'])) {
+				foreach ($conf[$name]['clutch'] as $child => $val) {
+					Each::exec($val, function ($src) use ($child) {
+						Config::load($src.$child.'/'.'.infra.json', $child);
+					});
+				}
+			}*/
+			/**
+			 *	Порядок установки update, 
+			 *	Порядок js и css
+			 * 	
+			**/
+			if (!empty($conf[$name]['dependencies'])) {
+				Each::exec($conf[$name]['dependencies'], function &($s) use ($name) {
+					Config::get($s);
+					$r = null; 
+					return $r;
+				});
+			}
+			foreach (Config::$list as $prop => $callback) {
+				if (!empty($conf[$name][$prop])) {
+					$callback($name, $conf[$name][$prop], $conf[$name]);
+				}	
+			}
+
+			if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
+				Each::exec($conf[$name]['require'], function &($s) use ($name) {
+					Path::req('-'.$name.'/'.$s);
+					$r = null; return $r;
+				});
+			}
 		});
 		return Config::$conf[$name];
 	}
@@ -172,7 +336,7 @@ class Config {
 	{	
 		$src = Path::theme($src);
 		if (!$src) return;
-		Once::exec('Config::load::'.$src, function () use ($src, $name) {
+		return Once::exec('Config::load::'.$src, function () use ($src, $name) {
 			
 			$d = file_get_contents($src);
 			try {
@@ -186,10 +350,12 @@ class Config {
 				Config::accept($name, $d);
 			} else {
 				foreach ($d as $k => &$v) {
+					//echo $k.'<br>';
 					Config::accept($k, $v);
 				}
+				//if (!$name) echo '<b>'.$src.'</b><br>';
 			}
-
+			return $d;
 		});
 	}
 	public static $list = array();
@@ -200,39 +366,20 @@ class Config {
 	public static function accept($name, $v)
 	{
 		$conf=&Config::$conf;
-		if (!empty($v['dependencies'])) {
-			//Должны быть добавлены в conf ДО $name
-			/**
-			 * Используется для порядка загрузки javascript
-			 * 
-			 **/
-			Each::exec($v['dependencies'], function &($s) use ($name) {
-				Config::get($s);
-				$r = null; 
-				return $r;
-			});
-		}
 		if (empty($conf[$name])) $conf[$name] = array();
 
 		if (!is_array($v)) return;
-		foreach ($v as $kk => $vv) {
-			if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
-			$conf[$name][$kk] = $vv;
-		}
-
-		foreach (self::$list as $prop => $callback) {
-			if (!empty($conf[$name][$prop])) {
-				$callback($name, $conf[$name][$prop], $conf[$name]);
-			}	
-		}
-
-		if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
-			Each::exec($conf[$name]['require'], function &($s) use ($name) {
-				Path::req('-'.$name.'/'.$s);
-				$r = null; return $r;
-			});
-		}
 		
+		if (empty($conf[$name]['replaceable'])) { //Меняет порядок наследования
+			foreach ($v as $kk => $vv) {
+				if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
+				$conf[$name][$kk] = $vv;
+			}
+		} else {
+			foreach ($v as $kk => $vv) {
+				$conf[$name][$kk] = $vv;
+			}
+		}	
 	}
 	private static function pubclean($part)
 	{
