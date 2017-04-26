@@ -371,15 +371,15 @@ class Config {
 
 		if (!is_array($v)) return;
 		
-		/*if (empty($conf[$name]['replaceable'])) { //Меняет порядок наследования
+		//if (empty($conf[$name]['replaceable'])) { //Меняет порядок наследования
 			foreach ($v as $kk => $vv) {
 				if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 				$conf[$name][$kk] = $vv;
 			}
-		} else {*/
-			foreach ($v as $kk => $vv) {
-				$conf[$name][$kk] = $vv;
-			}
+		//} else {*/
+		//	foreach ($v as $kk => $vv) {
+		//		$conf[$name][$kk] = $vv;
+		//	}
 		//}	
 	}
 	private static function pubclean($part)
