@@ -38,7 +38,12 @@ class Config {
 				//Path::$conf['clutch'][] = $value;
 			});*/
 			
+			Config::load('.infra.json');
 			
+			Config::load('~.infra.json');
+			
+			//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обраотку нового расширения. Для clutch
+			Config::load('!.infra.json');		
 
 			Config::get('path');
 			Config::get('config');
@@ -98,13 +103,9 @@ class Config {
 			//	ini_set('display_errors', true);
 			//});
 
-			Config::load('.infra.json');
+		
 			
-			Config::load('~.infra.json');
-			
-			//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обраотку нового расширения. Для clutch
-			Config::load('!.infra.json');
-			
+			Config::get('index');
 
 		
 			
@@ -370,16 +371,16 @@ class Config {
 
 		if (!is_array($v)) return;
 		
-		if (empty($conf[$name]['replaceable'])) { //Меняет порядок наследования
+		/*if (empty($conf[$name]['replaceable'])) { //Меняет порядок наследования
 			foreach ($v as $kk => $vv) {
 				if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 				$conf[$name][$kk] = $vv;
 			}
-		} else {
+		} else {*/
 			foreach ($v as $kk => $vv) {
 				$conf[$name][$kk] = $vv;
 			}
-		}	
+		//}	
 	}
 	private static function pubclean($part)
 	{
