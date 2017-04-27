@@ -121,7 +121,7 @@ class Config {
 		Config::scan('', function ($src, $level) use (&$search, $ex){
 			if (in_array($src, $ex)) return true; //вглубь не идём
 
-			if ($level <= 2) return;
+			if ($level < 2) return;
 			if ($level >= 3) return true;
 			if (!is_file($src.'.infra.json')) return;
 			$r = explode('/', $src);
