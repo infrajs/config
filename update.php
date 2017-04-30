@@ -7,6 +7,25 @@ use infrajs\path\Path;
 use infrajs\each\Each;
 
 
+
+//search
+//Анализируется папка vendor Находятся все производители поддерживающие конфигурационные файлы .infra.json
+//Некий производитель angelcharly попадёт в список поиска, если у него есть библиотека с файлом .infra.json
+//Эту обработку можно убрать если производители прописаны вручную в config.path.search проекта
+//Без этой обработке, например, переопределения в кореновм .infra.json для расширения weather
+//не применятся к Weather::$conf и неinfrajs расширения будет работать со значениями по умолчанию
+//.infra.json в самих неinfrajs расширениях также не будет прочитан,
+//но значения конфига по умолчанию и так указаны в переменной класса, вроде Weather::$conf по этому не скажется на работе
+//В общем заполняем config.path.search путями до установленных расширений
+//Config::search();
+$search = Config::search();
+if (!isset(Config::$sys['path'])) Config::$sys['path'] = array();
+Config::$sys['path']['search'] = $search;
+Config::$conf['path']['search'] = $search;
+
+
+
+//clutch
 Update::exec(); //Все updatы должны выполниться
 Config::$sys['path'] = array();
 Config::$sys['path']['clutch'] = array();
@@ -29,21 +48,9 @@ foreach (Config::$conf as $name => $c) { //clutch переносится из т
 Config::$conf['path']['clutch'] = Config::$sys['path']['clutch'];
 
 
-//search
-//Анализируется папка vendor Находятся все производители поддерживающие конфигурационные файлы .infra.json
-//Некий производитель angelcharly попадёт в список поиска, если у него есть библиотека с файлом .infra.json
-//Эту обработку можно убрать если производители прописаны вручную в config.path.search проекта
-//Без этой обработке, например, переопределения в кореновм .infra.json для расширения weather
-//не применятся к Weather::$conf и неinfrajs расширения будет работать со значениями по умолчанию
-//.infra.json в самих неinfrajs расширениях также не будет прочитан,
-//но значения конфига по умолчанию и так указаны в переменной класса, вроде Weather::$conf по этому не скажется на работе
-//В общем заполняем config.path.search путями до установленных расширений
-//Config::search();
-$search = Config::search();
-if (!isset(Config::$sys['path'])) Config::$sys['path'] = array();
-Config::$sys['path']['search'] = $search;
-Config::$conf['path']['search'] = $search;
 
+
+//cache/.infra.json 
 //В переменной что-то можно сохранять и использовать на старте системы. Перенос происходит при обновлении.
 $json = Load::json_encode(Config::$sys);
 file_put_contents(Path::$conf['cache'].'/.infra.json', $json);

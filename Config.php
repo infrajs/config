@@ -256,12 +256,12 @@ class Config {
 					});
 				}
 			}	
-			
+			foreach (Config::$conf as $name => $val) {
+				Config::get($name);
+			}
 		});
-		foreach (Config::$conf as $name => $val) {
-			Config::get($name);
-		}
 		return Config::$conf;
+		
 	}
 	public static function &get($name = null)
 	{
@@ -316,7 +316,7 @@ class Config {
 					$callback($name, $conf[$name][$prop], $conf[$name]);
 				}	
 			}
-
+			//if (isset($_GET['-config'])) echo $name.'<br>';
 			if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
 				Each::exec($conf[$name]['require'], function &($s) use ($name) {
 					Path::req('-'.$name.'/'.$s);
