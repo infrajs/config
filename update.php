@@ -18,6 +18,8 @@ use infrajs\each\Each;
 //но значения конфига по умолчанию и так указаны в переменной класса, вроде Weather::$conf по этому не скажется на работе
 //В общем заполняем config.path.search путями до установленных расширений
 //Config::search();
+Config::$sys['path'] = array();
+
 $search = Config::search();
 if (!isset(Config::$sys['path'])) Config::$sys['path'] = array();
 Config::$sys['path']['search'] = $search;
@@ -27,7 +29,6 @@ Config::$conf['path']['search'] = $search;
 
 //clutch
 Update::exec(); //Все updatы должны выполниться
-Config::$sys['path'] = array();
 Config::$sys['path']['clutch'] = array();
 foreach (Config::$conf as $name => $c) { //clutch переносится из того места где был указан в то место где нужен
 	if ($name == 'path') continue;
