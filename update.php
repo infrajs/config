@@ -18,7 +18,6 @@ use infrajs\each\Each;
 //но значения конфига по умолчанию и так указаны в переменной класса, вроде Weather::$conf по этому не скажется на работе
 //В общем заполняем config.path.search путями до установленных расширений
 //Config::search();
-Config::$sys['path'] = array();
 
 $search = Config::search();
 if (!isset(Config::$sys['path'])) Config::$sys['path'] = array();
