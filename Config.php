@@ -53,11 +53,10 @@ class Config {
 		//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обработку нового расширения. Для clutch
 		$sys = Config::load('!.infra.json');
 		if (!$sys) {
-			if (!isset(Config::$sys['path'])) Config::$sys['path'] = array();
 			if (!isset(Config::$conf['path'])) Config::$conf['path'] = array();
 			Config::$conf['path']['search'] = Config::search();
 		}
-
+		
 		Config::get('config');
 		
 		Config::get('each');
@@ -213,7 +212,6 @@ class Config {
 	}
 	public static function &getAll()
 	{
-
 		Config::$all = true;
 		Once::exec('Infrajs::Config::getAll', function () {
 			Config::init();
@@ -241,7 +239,7 @@ class Config {
 				$files = scandir($tsrc);
 				foreach ($files as $name) {
 					if ($name{0} == '.') continue;
-					if (!is_dir($tsrc.$name)) continue;
+					if (!is_dir($tsrc.$name)) continue;;
 					Config::load($tsrc.$name.'/.infra.json', $name);
 				}
 			}
@@ -379,7 +377,7 @@ class Config {
 		
 		//if (empty($conf[$name]['replaceable'])) { //Меняет порядок наследования
 			foreach ($v as $kk => $vv) {
-				if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
+				//if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 				$conf[$name][$kk] = $vv;
 			}
 		//} else {*/
