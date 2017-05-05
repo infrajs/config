@@ -13,128 +13,134 @@ class Config {
 	public static $all = false; //флаг, что собраны все конфиги
 	public static function init ()
 	{
-		Once::exec(__FILE__.'::init', function() {
-			
-			Config::add('conf', function ($name, $value, &$conf) {
-				$valconf = $value::$conf;
-				foreach ($conf as $k=>$v) $valconf[$k]=$v; //merge нужно делать с сохранением ключей, даже для числовых ключей
-				$conf = $valconf;
-				//$conf=array_merge($value::$conf, $conf); //Второй массив важнее его значения остаются
-				$value::$conf=&$conf;
-			});
-			/*Config::add('clutch', function ($name, $value, &$conf) { 
-				//Имя расширения в котором найдено свойство, значение, весь конфиг того расширения
-				//$dir = Path::theme('-'.$name.'/');
-				foreach ($value as $plugin => $paths) {
-					Each::exec($paths, function &($dir) use ($plugin, &$conf) {
-						if (empty(Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin] = [];
-
-						//Все clutch складываем в Path
-						if (!in_array($dir, Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin][] = $dir;
-						Config::load($dir.$plugin.'/.infra.json', $plugin);
-						$r = null; return $r;
-					});
-				}
-				//Path::$conf['clutch'][] = $value;
-			});*/
-			
-			Config::load('.infra.json');
-			
-			Config::load('~.infra.json');
-			
-			//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обраотку нового расширения. Для clutch
-			Config::load('!.infra.json');		
-
-			Config::get('path');
-			Config::get('config');
-			Config::get('each');
-			Config::get('hash');
-			Config::get('once');
-			Config::get('load');
-			Config::get('ans');
-			
-			/* 
-				echo '<pre>';
-				print_r(get_declared_classes());
-				exit;
-				Debug проврить классы каких расширений после композера загружены и в ручную инициализировать их конфиги
-			    [132] => infrajs\config\Config
-				[133] => infrajs\once\Once
-				[134] => infrajs\hash\Hash
-				[135] => infrajs\path\Path
-				[136] => infrajs\load\Load
-				[137] => infrajs\each\Each
-				[138] => infrajs\ans\Ans
-			*/
-
-			@header('Infrajs-Config-All: false');
-			require_once('vendor/infrajs/path/Path.php');
-			spl_autoload_register( function ($class_name) {
-				$p = explode('\\', $class_name);
-				if (sizeof($p) < 3) return;
-				
-				//Ищем имя расширения по переданному полному адресу до Класса
-				//Ситуация с именем расширения
-				//infrajs/path/Path - path
-				//infrajs/path/src/URN - path
-				//infrajs/config/search/Search - config-search Search
-				//infrajs/config/search/Search - config search/Search
-				//infrajs/config/Search - config src/Search
-				//path/Path - path
-				//path/src/URN - path
-				//config/search/Search - config-search
-
-				$vendor = array_shift($p);
-				$class = array_pop($p);
-				$name = implode('-',$p);
-				while (!Path::theme('-'.$name.'/') && sizeof($p)>1) {
-					array_pop($p);
-					$name = implode('-',$p);
-				}
-				if (!empty(Config::$exec[$name])) return;
-				if (!Path::theme('-'.$name.'/')) return;
-				Config::$exec[$name] = true;
-
-				spl_autoload_call($class_name);
-				
-				Config::get($name); // <- Всё ради автоматического этого
-			}, true, true);
-			//set_error_handler( function () { //bugfix
-			//	ini_set('display_errors', true);
-			//});
-
+		if (Once::omit(__FILE__.'::init')) return;
 		
 			
-			Config::get('index');
-
-		
-			
+		Config::add('conf', function ($name, $value, &$conf) {
+			$valconf = $value::$conf;
+			foreach ($conf as $k => $v) $valconf[$k] = $v; //merge нужно делать с сохранением ключей, даже для числовых ключей
+			$conf = $valconf;
+			//$conf=array_merge($value::$conf, $conf); //Второй массив важнее его значения остаются
+			$value::$conf = &$conf;
 		});
+		/*Config::add('clutch', function ($name, $value, &$conf) { 
+			//Имя расширения в котором найдено свойство, значение, весь конфиг того расширения
+			//$dir = Path::theme('-'.$name.'/');
+			foreach ($value as $plugin => $paths) {
+				Each::exec($paths, function &($dir) use ($plugin, &$conf) {
+					if (empty(Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin] = [];
+
+					//Все clutch складываем в Path
+					if (!in_array($dir, Path::$conf['clutch'][$plugin])) Path::$conf['clutch'][$plugin][] = $dir;
+					Config::load($dir.$plugin.'/.infra.json', $plugin);
+					$r = null; return $r;
+				});
+			}
+			//Path::$conf['clutch'][] = $value;
+		});*/
+		
+		Config::load('.infra.json');
+
+		/**
+		 * Для Path конфиг подменить можно только в корне проекта.
+		 * Конфигурировать Path в data нельзя
+		 * Это нужно что бы можно было конфигурировать пути ~, !
+		 **/
+		Config::get('path');
+
+		Config::load('~.infra.json');
+		
+		//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обработку нового расширения. Для clutch
+		$sys = Config::load('!.infra.json');
+		if (!$sys) {
+			if (!isset(Config::$sys['path'])) Config::$sys['path'] = array();
+			if (!isset(Config::$conf['path'])) Config::$conf['path'] = array();
+			Config::$conf['path']['search'] = Config::search();
+		}
+
+		Config::get('config');
+		
+		Config::get('each');
+		Config::get('hash');
+		Config::get('once');
+		Config::get('load');
+		Config::get('ans');
+		
+		/* 
+			echo '<pre>';
+			print_r(get_declared_classes());
+			exit;
+			Debug проврить классы каких расширений после композера загружены и в ручную инициализировать их конфиги
+		    [132] => infrajs\config\Config
+			[133] => infrajs\once\Once
+			[134] => infrajs\hash\Hash
+			[135] => infrajs\path\Path
+			[136] => infrajs\load\Load
+			[137] => infrajs\each\Each
+			[138] => infrajs\ans\Ans
+		*/
+		//require_once('vendor/infrajs/path/Path.php');
+		spl_autoload_register( function ($class_name) {
+			$p = explode('\\', $class_name);
+			if (sizeof($p) < 3) return;
+			
+			//Ищем имя расширения по переданному полному адресу до Класса
+			//Ситуация с именем расширения
+			//infrajs/path/Path - path
+			//infrajs/path/src/URN - path
+			//infrajs/config/search/Search - config-search Search
+			//infrajs/config/search/Search - config search/Search
+			//infrajs/config/Search - config src/Search
+			//path/Path - path
+			//path/src/URN - path
+			//config/search/Search - config-search
+
+			$vendor = array_shift($p);
+			$class = array_pop($p);
+			$name = implode('-',$p);
+			while (!Path::theme('-'.$name.'/') && sizeof($p)>1) {
+				array_pop($p);
+				$name = implode('-',$p);
+			}
+
+			if (!empty(Config::$exec[$name])) return;
+			if (!Path::theme('-'.$name.'/')) return;
+
+			Config::$exec[$name] = true;
+
+			spl_autoload_call($class_name);
+			
+			Config::get($name); // <- Всё ради автоматического этого
+		}, true, true);
+		//set_error_handler( function () { //bugfix
+		//	ini_set('display_errors', true);
+		//});
+		Config::get('index');
 	}
 	public static function search ()
 	{
 		//Используется в update.php
 		//Заполнять Path::$conf['search'] нужно после того как пройдёт инициализация конфигов .infra.json
 		//Чтобы значения по умолчанию не заменили сгенерированные значения
-		$search = array();
-		$ex = array_merge(array(Path::$conf['cache'], Path::$conf['data']), Path::$conf['search']);
-		Config::scan('', function ($src, $level) use (&$search, $ex){
-			if (in_array($src, $ex)) return true; //вглубь не идём
+		return Once::exec(__FILE__.':search', function(){
+			$search = array();
+			$ex = array_merge(array(Path::$conf['cache'], Path::$conf['data']), Path::$conf['search']);
+			Config::scan('', function ($src, $level) use (&$search, $ex){
+				if (in_array($src, $ex)) return true; //вглубь не идём
 
-			if ($level < 2) return;
-			if ($level >= 3) return true;
-			if (!is_file($src.'.infra.json')) return;
-			$r = explode('/', $src);
-			array_pop($r);
-			array_pop($r);
-			
-			$search[] = implode('/',$r).'/';
-			return false; //вглубь не идём и в соседние папки тоже
+				if ($level < 2) return;
+				if ($level >= 3) return true;
+				if (!is_file($src.'.infra.json')) return;
+				$r = explode('/', $src);
+				array_pop($r);
+				array_pop($r);
+				
+				$search[] = implode('/',$r).'/';
+				return false; //вглубь не идём и в соседние папки тоже
+			});
+			$search = array_values(array_unique(array_merge(Path::$conf['search'], $search)));
+			return $search;
 		});
-		$search = array_values(array_unique(array_merge(Path::$conf['search'], $search)));
-		return $search;
-		
-
 		/*if (Config::$all) { //Если все конфиги были уже обраны, нужно заного пробежаться по найденным
 			for ($i = 0; $i < sizeof($search); $i++) {
 				$tsrc = $search[$i];
@@ -268,7 +274,7 @@ class Config {
 		
 		if (!$name) return Config::getAll();
 		Once::exec(__FILE__.'::get'.$name, function () use ($name) {
-			
+
 			Config::init();
 
 			Config::load($name.'/.infra.json', $name);
