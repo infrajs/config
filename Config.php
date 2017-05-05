@@ -41,24 +41,17 @@ class Config {
 		
 		Config::load('.infra.json');
 
-		/**
-		 * Для Path конфиг подменить можно только в корне проекта.
-		 * Конфигурировать Path в data нельзя
-		 * Это нужно что бы можно было конфигурировать пути ~, !
-		 **/
-		Config::get('path');
-
 		Config::load('~.infra.json');
 		
 		//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обработку нового расширения. Для clutch
 		$sys = Config::load('!.infra.json');
+		
 		if (!$sys) {
 			if (!isset(Config::$conf['path'])) Config::$conf['path'] = array();
 			Config::$conf['path']['search'] = Config::search();
 		}
-		
+		Config::get('path');
 		Config::get('config');
-		
 		Config::get('each');
 		Config::get('hash');
 		Config::get('once');
@@ -278,11 +271,11 @@ class Config {
 			Config::load($name.'/.infra.json', $name);
 			//Config::load('index/'.$name.'/.infra.json', $name);
 
-			foreach (Path::$conf['search'] as $dir) {
+			foreach (Config::$conf['path']['search'] as $dir) {
 				Config::load($dir.$name.'/.infra.json', $name);	
 			}
-			if (isset(Path::$conf['clutch'][$name])) {
-				Each::exec(Path::$conf['clutch'][$name], function &($src) use ($name) {
+			if (isset(Config::$conf['path']['clutch'][$name])) {
+				Each::exec(Config::$conf['path']['clutch'][$name], function &($src) use ($name) {
 					$r = null;
 					Config::load($src.$name.'/'.'.infra.json', $name);
 					return $r;
@@ -315,6 +308,8 @@ class Config {
 					return $r;
 				});
 			}
+
+			//Должен быть до req.. чтобы conf уже обработался и в Path был правильный search
 			foreach (Config::$list as $prop => $callback) {
 				if (!empty($conf[$name][$prop])) {
 					$callback($name, $conf[$name][$prop], $conf[$name]);
@@ -377,7 +372,7 @@ class Config {
 		
 		//if (empty($conf[$name]['replaceable'])) { //Меняет порядок наследования
 			foreach ($v as $kk => $vv) {
-				//if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
+				if (isset($conf[$name][$kk])) continue; //То что уже есть в конфиге круче вновь прибывшего
 				$conf[$name][$kk] = $vv;
 			}
 		//} else {*/
