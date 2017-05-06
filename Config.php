@@ -46,10 +46,15 @@ class Config {
 		//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обработку нового расширения. Для clutch
 		$sys = Config::load('!.infra.json');
 		
-		if (!$sys) {
-			if (!isset(Config::$conf['path'])) Config::$conf['path'] = array();
-			Config::$conf['path']['search'] = Config::search();
-		}
+
+		if (!isset(Config::$conf['path'])) Config::$conf['path'] = array();
+		
+		if(empty(Config::$conf['path']['cache'])) Config::$conf['path']['cache'] = Path::$conf['cache'];
+		if(empty(Config::$conf['path']['data'])) Config::$conf['path']['data'] = Path::$conf['data'];
+		if (empty(Config::$conf['path']['search'])) Config::$conf['path']['search'] = array('vendor/infrajs/');
+		if (!$sys) Config::$conf['path']['search'] = Config::search();
+		
+
 		Config::get('path');
 		Config::get('config');
 		Config::get('each');
@@ -116,7 +121,7 @@ class Config {
 		//Чтобы значения по умолчанию не заменили сгенерированные значения
 		return Once::exec(__FILE__.':search', function(){
 			$search = array();
-			$ex = array_merge(array(Path::$conf['cache'], Path::$conf['data']), Path::$conf['search']);
+			$ex = array_merge(array(Config::$conf['path']['cache'], Config::$conf['path']['data']), Config::$conf['path']['search']);
 			Config::scan('', function ($src, $level) use (&$search, $ex){
 				if (in_array($src, $ex)) return true; //вглубь не идём
 
@@ -130,7 +135,7 @@ class Config {
 				$search[] = implode('/',$r).'/';
 				return false; //вглубь не идём и в соседние папки тоже
 			});
-			$search = array_values(array_unique(array_merge(Path::$conf['search'], $search)));
+			$search = array_values(array_unique(array_merge(Config::$conf['path']['search'], $search)));
 			return $search;
 		});
 		/*if (Config::$all) { //Если все конфиги были уже обраны, нужно заного пробежаться по найденным
@@ -221,11 +226,11 @@ class Config {
 			foreach ($files as $name) {
 				if ($name{0} == '.') continue;
 				if (!is_dir($name)) continue;
-				if (in_array($name.'/', array(Path::$conf['cache'], Path::$conf['data']))) continue;
+				if (in_array($name.'/', array(Config::$conf['path']['cache'], Config::$conf['path']['data']))) continue;
 				Config::load($name.'/.infra.json', $name);
 			}
 
-			$path = Path::$conf;
+			$path = Config::$conf['path'];
 			for ($i = 0; $i < sizeof($path['search']); $i++) {
 				$tsrc = $path['search'][$i];
 				if (!is_dir($tsrc)) continue;
