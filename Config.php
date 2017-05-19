@@ -39,12 +39,15 @@ class Config {
 			//Path::$conf['clutch'][] = $value;
 		});*/
 		
+		
+		//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обработку нового расширения. Для clutch
+		$sys = Config::load('!.infra.json');
+		
 		Config::load('.infra.json');
 
 		Config::load('~.infra.json');
 		
-		//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обработку нового расширения. Для clutch
-		$sys = Config::load('!.infra.json');
+		
 		
 
 		if (!isset(Config::$conf['path'])) Config::$conf['path'] = array();
