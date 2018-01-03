@@ -45,9 +45,15 @@ foreach (Config::$conf as $name => $c) { //clutch переносится из т
 //clutch во время update не может подменить .infra.json если он уже был выполнен
 //Сохраняем для работы поиска файла
 //Для работы Update срабатывает getAll где каждый clutch в отдельности будет обработан
-Config::$conf['path']['clutch'] = Config::$sys['path']['clutch'];
 
-
+//При обновлении всё что было добавлено в Config::$sys должно попасть и в $conf;			
+foreach ($sys as $name => $v) {
+	if (empty(Config::$conf[$name])) Config::$conf[$name] = array();
+	foreach ($v as $kk => $vv) {
+		Config::$conf[$name][$kk] = $vv;
+	}
+}
+//Config::$conf['path']['clutch'] = Config::$sys['path']['clutch'];
 
 
 //cache/.infra.json 
