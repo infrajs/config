@@ -47,7 +47,7 @@ foreach (Config::$conf as $name => $c) { //clutch переносится из т
 //Для работы Update срабатывает getAll где каждый clutch в отдельности будет обработан
 
 //При обновлении всё что было добавлено в Config::$sys должно попасть и в $conf;			
-foreach ($sys as $name => $v) {
+foreach (Config::$sys as $name => $v) {
 	if (empty(Config::$conf[$name])) Config::$conf[$name] = array();
 	foreach ($v as $kk => $vv) {
 		Config::$conf[$name][$kk] = $vv;
