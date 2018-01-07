@@ -43,7 +43,7 @@ class Config {
 		//Конфиг в кэш папке генерируется автоматически это единственный способ попасть в стартовую обработку нового расширения. Для clutch
 		$sys = Config::load('!.infra.json');
 		
-		Config::load('.infra.json');
+		Config::load('.infra.json'); //При совпадени опций будет ошибка
 
 		Config::load('~.infra.json');
 		
