@@ -28,6 +28,7 @@ Config::$conf['path']['search'] = $search;
 
 //clutch
 Update::exec(); //Все updatы должны выполниться
+
 Config::$sys['path']['clutch'] = array();
 foreach (Config::$conf as $name => $c) { //clutch переносится из того места где был указан в то место где нужен
 	if ($name == 'path') continue;
