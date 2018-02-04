@@ -232,6 +232,13 @@ class Config {
 				if (in_array($name.'/', array(Config::$conf['path']['cache'], Config::$conf['path']['data']))) continue;
 				Config::load($name.'/.infra.json', $name);
 			}
+			
+			$files = scandir('index/');
+			foreach ($files as $name) {
+				if ($name{0} == '.') continue;
+				if (!is_dir('index/'.$name)) continue;
+				Config::load('index/'.$name.'/.infra.json', $name);
+			}
 
 			$path = Config::$conf['path'];
 			for ($i = 0; $i < sizeof($path['search']); $i++) {
