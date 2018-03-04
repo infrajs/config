@@ -116,6 +116,11 @@ class Config {
 		//	ini_set('display_errors', true);
 		//});
 		Config::get('index');
+		foreach ($_GET as $name => $val) { //Параметр в адресной строке инициализирует соответствующее расширение
+			if ($name{0}!='-') continue;
+			$ext = substr($name, 1);
+			Config::get($ext);
+		}
 	}
 	public static function search ()
 	{
