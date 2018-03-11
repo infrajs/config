@@ -13,8 +13,7 @@ class Config {
 	public static $all = false; //флаг, что собраны все конфиги
 	public static function init ()
 	{
-		if (Once::omit(__FILE__.'::init')) return;
-		
+		if (Once::omit()) return;
 			
 		Config::add('conf', function ($name, $value, &$conf) {
 			$valconf = $value::$conf;
@@ -44,7 +43,6 @@ class Config {
 		$sys = Config::load('!.infra.json');
 		
 		Config::load('.infra.json'); //При совпадени опций будет ошибка
-
 		Config::load('~.infra.json');
 		
 		
@@ -127,7 +125,7 @@ class Config {
 		//Используется в update.php
 		//Заполнять Path::$conf['search'] нужно после того как пройдёт инициализация конфигов .infra.json
 		//Чтобы значения по умолчанию не заменили сгенерированные значения
-		return Once::exec(__FILE__.':search', function(){
+		return Once::func( function(){
 			$search = array();
 			$ex = array_merge(array(Config::$conf['path']['cache'], Config::$conf['path']['data']), Config::$conf['path']['search']);
 			Config::scan('', function ($src, $level) use (&$search, $ex){
@@ -219,7 +217,7 @@ class Config {
 	public static function &getAll()
 	{
 		Config::$all = true;
-		Once::exec('Infrajs::Config::getAll', function () {
+		Once::func( function () {
 			Config::init();
 			@header('Infrajs-Config-All: true');
 			/**
@@ -284,65 +282,64 @@ class Config {
 	{
 		
 		if (!$name) return Config::getAll();
-		Once::exec(__FILE__.'::get'.$name, function () use ($name) {
+		if (Once::omit([$name])) return Config::$conf[$name];
+		
+		Config::init();
 
-			Config::init();
+		Config::load($name.'/.infra.json', $name);
+		//Config::load('index/'.$name.'/.infra.json', $name);
 
-			Config::load($name.'/.infra.json', $name);
-			//Config::load('index/'.$name.'/.infra.json', $name);
-
-			foreach (Config::$conf['path']['search'] as $dir) {
-				Config::load($dir.$name.'/.infra.json', $name);	
-			}
-			if (isset(Config::$conf['path']['clutch'][$name])) {
-				Each::exec(Config::$conf['path']['clutch'][$name], function &($src) use ($name) {
-					$r = null;
-					Config::load($src.$name.'/'.'.infra.json', $name);
-					return $r;
-				});
-			}
-			
-
-			$conf = &Config::$conf;
-			if (!isset($conf[$name])) {
-				$r = array();
+		foreach (Config::$conf['path']['search'] as $dir) {
+			Config::load($dir.$name.'/.infra.json', $name);	
+		}
+		if (isset(Config::$conf['path']['clutch'][$name])) {
+			Each::exec(Config::$conf['path']['clutch'][$name], function &($src) use ($name) {
+				$r = null;
+				Config::load($src.$name.'/'.'.infra.json', $name);
 				return $r;
-			}
+			});
+		}
+		
 
-			/*if (!empty($conf[$name]['clutch'])) {
-				foreach ($conf[$name]['clutch'] as $child => $val) {
-					Each::exec($val, function ($src) use ($child) {
-						Config::load($src.$child.'/'.'.infra.json', $child);
-					});
-				}
-			}*/
-			/**
-			 *	Порядок установки update, 
-			 *	Порядок js и css
-			 * 	
-			**/
-			if (!empty($conf[$name]['dependencies'])) {
-				Each::exec($conf[$name]['dependencies'], function &($s) use ($name) {
-					Config::get($s);
-					$r = null; 
-					return $r;
+		$conf = &Config::$conf;
+		if (!isset($conf[$name])) {
+			$r = array();
+			return $r;
+		}
+
+		/*if (!empty($conf[$name]['clutch'])) {
+			foreach ($conf[$name]['clutch'] as $child => $val) {
+				Each::exec($val, function ($src) use ($child) {
+					Config::load($src.$child.'/'.'.infra.json', $child);
 				});
 			}
+		}*/
+		/**
+		 *	Порядок установки update, 
+		 *	Порядок js и css
+		 * 	
+		**/
+		if (!empty($conf[$name]['dependencies'])) {
+			Each::exec($conf[$name]['dependencies'], function &($s) use ($name) {
+				Config::get($s);
+				$r = null; 
+				return $r;
+			});
+		}
 
-			//Должен быть до req.. чтобы conf уже обработался и в Path был правильный search
-			foreach (Config::$list as $prop => $callback) {
-				if (!empty($conf[$name][$prop])) {
-					$callback($name, $conf[$name][$prop], $conf[$name]);
-				}	
-			}
-			//if (isset($_GET['-config'])) echo $name.'<br>';
-			if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
-				Each::exec($conf[$name]['require'], function &($s) use ($name) {
-					Path::req('-'.$name.'/'.$s);
-					$r = null; return $r;
-				});
-			}
-		});
+		//Должен быть до req.. чтобы conf уже обработался и в Path был правильный search
+		foreach (Config::$list as $prop => $callback) {
+			if (!empty($conf[$name][$prop])) {
+				$callback($name, $conf[$name][$prop], $conf[$name]);
+			}	
+		}
+		//if (isset($_GET['-config'])) echo $name.'<br>';
+		if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
+			Each::exec($conf[$name]['require'], function &($s) use ($name) {
+				Path::req('-'.$name.'/'.$s);
+				$r = null; return $r;
+			});
+		}
 		return Config::$conf[$name];
 	}
 	public static function reqsrc($src)
@@ -354,10 +351,9 @@ class Config {
 	}
 	public static function load($src, $name = null)
 	{	
-		$src = Path::theme($src);
-		if (!$src) return;
-		return Once::exec('Config::load::'.$src, function () use ($src, $name) {
-			
+		return Once::func( function ($src) use ($name) {
+			$src = Path::theme($src);
+			if (!$src) return;
 			$d = file_get_contents($src);
 			try {
 				$d = Load::json_decode($d);
@@ -376,7 +372,7 @@ class Config {
 				//if (!$name) echo '<b>'.$src.'</b><br>';
 			}
 			return $d;
-		});
+		}, array($src));
 	}
 	public static $list = array();
 	public static function add($prop, $callback)
