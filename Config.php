@@ -278,70 +278,70 @@ class Config {
 		return Config::$conf;
 		
 	}
+	public static $ready = array();
 	public static function &get($name = null)
 	{
 		
 		if (!$name) return Config::getAll();
-		return Once::func( function &($name){
+		if (isset(Config::$ready[$name])) return Config::$conf[$name];
+		Config::$ready[$name] = true;
+		Config::init();
 
-			Config::init();
+		Config::load($name.'/.infra.json', $name);
+		//Config::load('index/'.$name.'/.infra.json', $name);
 
-			Config::load($name.'/.infra.json', $name);
-			//Config::load('index/'.$name.'/.infra.json', $name);
-
-			foreach (Config::$conf['path']['search'] as $dir) {
-				Config::load($dir.$name.'/.infra.json', $name);	
-			}
-			if (isset(Config::$conf['path']['clutch'][$name])) {
-				Each::exec(Config::$conf['path']['clutch'][$name], function &($src) use ($name) {
-					$r = null;
-					Config::load($src.$name.'/'.'.infra.json', $name);
-					return $r;
-				});
-			}
-			
-
-			$conf = &Config::$conf;
-			if (!isset($conf[$name])) {
-				$r = array();
+		foreach (Config::$conf['path']['search'] as $dir) {
+			Config::load($dir.$name.'/.infra.json', $name);	
+		}
+		if (isset(Config::$conf['path']['clutch'][$name])) {
+			Each::exec(Config::$conf['path']['clutch'][$name], function &($src) use ($name) {
+				$r = null;
+				Config::load($src.$name.'/'.'.infra.json', $name);
 				return $r;
-			}
+			});
+		}
+		
 
-			/*if (!empty($conf[$name]['clutch'])) {
-				foreach ($conf[$name]['clutch'] as $child => $val) {
-					Each::exec($val, function ($src) use ($child) {
-						Config::load($src.$child.'/'.'.infra.json', $child);
-					});
-				}
-			}*/
-			/**
-			 *	Порядок установки update, 
-			 *	Порядок js и css
-			 * 	
-			**/
-			if (!empty($conf[$name]['dependencies'])) {
-				Each::exec($conf[$name]['dependencies'], function &($s) use ($name) {
-					Config::get($s);
-					$r = null; 
-					return $r;
+		$conf = &Config::$conf;
+		if (!isset($conf[$name])) {
+			$r = array();
+			return $r;
+		}
+
+		/*if (!empty($conf[$name]['clutch'])) {
+			foreach ($conf[$name]['clutch'] as $child => $val) {
+				Each::exec($val, function ($src) use ($child) {
+					Config::load($src.$child.'/'.'.infra.json', $child);
 				});
 			}
+		}*/
+		/**
+		 *	Порядок установки update, 
+		 *	Порядок js и css
+		 * 	
+		**/
+		if (!empty($conf[$name]['dependencies'])) {
+			Each::exec($conf[$name]['dependencies'], function &($s) use ($name) {
+				Config::get($s);
+				$r = null; 
+				return $r;
+			});
+		}
 
-			//Должен быть до req.. чтобы conf уже обработался и в Path был правильный search
-			foreach (Config::$list as $prop => $callback) {
-				if (!empty($conf[$name][$prop])) {
-					$callback($name, $conf[$name][$prop], $conf[$name]);
-				}	
-			}
-			//if (isset($_GET['-config'])) echo $name.'<br>';
-			if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
-				Each::exec($conf[$name]['require'], function &($s) use ($name) {
-					Path::req('-'.$name.'/'.$s);
-					$r = null; return $r;
-				});
-			}
-			return Config::$conf[$name];
-		}, [$name]);
+		//Должен быть до req.. чтобы conf уже обработался и в Path был правильный search
+		foreach (Config::$list as $prop => $callback) {
+			if (!empty($conf[$name][$prop])) {
+				$callback($name, $conf[$name][$prop], $conf[$name]);
+			}	
+		}
+		//if (isset($_GET['-config'])) echo $name.'<br>';
+		if(!empty($conf[$name]['require'])&&empty($conf[$name]['off'])){
+			Each::exec($conf[$name]['require'], function &($s) use ($name) {
+				Path::req('-'.$name.'/'.$s);
+				$r = null; return $r;
+			});
+		}
+		return Config::$conf[$name];
 	}
 	public static function reqsrc($src)
 	{
@@ -350,11 +350,12 @@ class Config {
 			$r = null; return $r;
 		});
 	}
-	public static function load($src, $name = null)
+	public static function load($isrc, $name = null)
 	{	
-		return Once::func( function ($src) use ($name) {
-			$src = Path::theme($src);
-			if (!$src) return;
+		$src = Path::theme($isrc);
+		if (!$src) return;
+		return Once::func( function ($isrc) use ($name) {
+			$src = Path::theme($isrc);
 			$d = file_get_contents($src);
 			
 			try {
@@ -375,7 +376,7 @@ class Config {
 				//if (!$name) echo '<b>'.$src.'</b><br>';
 			}
 			return $d;
-		}, array($src));
+		}, array($isrc));
 	}
 	public static $list = array();
 	public static function add($prop, $callback)
