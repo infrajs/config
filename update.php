@@ -33,6 +33,7 @@ Config::$sys['path']['clutch'] = array();
 foreach (Config::$conf as $name => $c) { //clutch переносится из того места где был указан в то место где нужен
 	if ($name == 'path') continue;
 	if(empty($c['clutch'])) continue;
+	if (!empty($c['off'])) continue;
 	foreach($c['clutch'] as $k => $v) {
 		if (empty(Config::$sys['path']['clutch'][$k])) Config::$sys['path']['clutch'][$k] = array();
 		Each::exec($v, function &($dir) use ($k) {

@@ -263,6 +263,7 @@ class Config {
 			foreach (Config::$conf as $name => $conf) {
 				if ($name == 'path') continue;
 				if (empty($conf['clutch'])) continue;
+				if (!empty($conf['off'])) continue;
 				foreach ($conf['clutch'] as $child => $val) {
 					Each::exec($val, function &($src) use ($child) {
 						$r = null;
