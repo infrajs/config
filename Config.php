@@ -236,11 +236,13 @@ class Config {
 				Config::load($name.'/.infra.json', $name);
 			}
 			
-			$files = scandir('index/');
-			foreach ($files as $name) {
-				if ($name{0} == '.') continue;
-				if (!is_dir('index/'.$name)) continue;
-				Config::load('index/'.$name.'/.infra.json', $name);
+			if (is_dir('index/')) {
+				$files = scandir('index/');
+				foreach ($files as $name) {
+					if ($name{0} == '.') continue;
+					if (!is_dir('index/'.$name)) continue;
+					Config::load('index/'.$name.'/.infra.json', $name);
+				}
 			}
 
 			$path = Config::$conf['path'];
