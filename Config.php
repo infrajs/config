@@ -184,7 +184,7 @@ class Config {
 		$d = opendir($src);
 		$r = null;
 		while ($file = readdir($d)) {
-
+			$file = Path::tofs($file);
 			if ($file{0}=='.') continue;
 			$dir = $idir.Path::toutf($file);
 			$isdir = is_dir($src.$file);
