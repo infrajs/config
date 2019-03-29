@@ -291,7 +291,7 @@ class Config {
 		Config::init();
 
 		Config::load($name.'/.infra.json', $name);
-		//Config::load('index/'.$name.'/.infra.json', $name);
+		Config::load('index/'.$name.'/.infra.json', $name);
 
 		foreach (Config::$conf['path']['search'] as $dir) {
 			Config::load($dir.$name.'/.infra.json', $name);	
