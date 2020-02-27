@@ -114,7 +114,7 @@ class Config {
 			//});
 			Config::get('index');
 			foreach ($_GET as $name => $val) { //Параметр в адресной строке инициализирует соответствующее расширение
-				if ($name{0}!='-') continue;
+				if ($name[0]!='-') continue;
 				$ext = substr($name, 1);
 				Config::get($ext);
 			}
@@ -150,7 +150,7 @@ class Config {
 				if (!is_dir($tsrc)) continue;
 				$files = scandir($tsrc);
 				foreach ($files as $file) {
-					if ($file{0} == '.') continue;
+					if ($file[0] == '.') continue;
 					if (!is_dir($tsrc.$file)) continue;
 					Config::load($tsrc.$file.'/.infra.json', $file);
 				}
@@ -185,7 +185,7 @@ class Config {
 		$r = null;
 		while ($file = readdir($d)) {
 			$file = Path::tofs($file);
-			if ($file{0}=='.') continue;
+			if ($file[0]=='.') continue;
 			$dir = $idir.Path::toutf($file);
 			$isdir = is_dir($src.$file);
 			if ($isdir) {
@@ -230,7 +230,7 @@ class Config {
 			
 			$files = scandir('.');
 			foreach ($files as $name) {
-				if ($name{0} == '.') continue;
+				if ($name[0] == '.') continue;
 				if (!is_dir($name)) continue;
 				if (in_array($name.'/', array(Config::$conf['path']['cache'], Config::$conf['path']['data']))) continue;
 				Config::load($name.'/.infra.json', $name);
@@ -239,7 +239,7 @@ class Config {
 			if (is_dir('index/')) {
 				$files = scandir('index/');
 				foreach ($files as $name) {
-					if ($name{0} == '.') continue;
+					if ($name[0] == '.') continue;
 					if (!is_dir('index/'.$name)) continue;
 					Config::load('index/'.$name.'/.infra.json', $name);
 				}
@@ -251,7 +251,7 @@ class Config {
 				if (!is_dir($tsrc)) continue;
 				$files = scandir($tsrc);
 				foreach ($files as $name) {
-					if ($name{0} == '.') continue;
+					if ($name[0] == '.') continue;
 					if (!is_dir($tsrc.$name)) continue;;
 					Config::load($tsrc.$name.'/.infra.json', $name);
 				}
