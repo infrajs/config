@@ -112,7 +112,9 @@ class Config {
 			//set_error_handler( function () { //bugfix
 			//	ini_set('display_errors', true);
 			//});
+
 			Config::get('index');
+
 			foreach ($_GET as $name => $val) { //Параметр в адресной строке инициализирует соответствующее расширение
 				if ($name[0]!='-') continue;
 				$ext = substr($name, 1);
@@ -255,6 +257,7 @@ class Config {
 				}
 			}
 
+
 			$path = Config::$conf['path'];
 			for ($i = 0; $i < sizeof($path['search']); $i++) {
 				$tsrc = $path['search'][$i];
@@ -303,9 +306,7 @@ class Config {
 		Config::load($name.'/.infra.json', $name);
 		Config::load('index/'.$name.'/.infra.json', $name);
 
-		foreach (Config::$conf['path']['search'] as $dir) {
-			Config::load($dir.$name.'/.infra.json', $name);	
-		}
+	
 		if (isset(Config::$conf['path']['clutch'][$name])) {
 			Each::exec(Config::$conf['path']['clutch'][$name], function &($src) use ($name) {
 				$r = null;
@@ -313,8 +314,10 @@ class Config {
 				return $r;
 			});
 		}
+		foreach (Config::$conf['path']['search'] as $dir) {
+			Config::load($dir.$name.'/.infra.json', $name);	
+		}
 		
-
 		$conf = &Config::$conf;
 		if (!isset($conf[$name])) {
 			$r = array();
@@ -333,6 +336,7 @@ class Config {
 		 *	Порядок js и css
 		 * 	
 		**/
+		
 		if (!empty($conf[$name]['dependencies'])) {
 			Each::exec($conf[$name]['dependencies'], function &($s) use ($name) {
 				Config::get($s);
