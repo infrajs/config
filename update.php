@@ -39,7 +39,7 @@ foreach (Config::$conf as $name => $c) { //clutch переносится из т
 		Each::exec($v, function &($dir) use ($k) {
 			$r = null;
 			if (in_array($dir, Config::$sys['path']['clutch'][$k])) return $r;
-			Config::$sys['path']['clutch'][$k][] = $dir;
+			array_unshift(Config::$sys['path']['clutch'][$k],$dir);
 			return $r;
 		});
 	}

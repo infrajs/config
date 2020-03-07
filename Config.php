@@ -245,6 +245,16 @@ class Config {
 				}
 			}
 
+			if (isset(Config::$conf['path']['clutch'])) {
+				foreach (Config::$conf['path']['clutch'] as $name => $vals) {
+					Each::exec(Config::$conf['path']['clutch'][$name], function &($src) use ($name) {
+						$r = null;
+						Config::load($src.$name.'/'.'.infra.json', $name);
+						return $r;
+					});	
+				}
+			}
+
 			$path = Config::$conf['path'];
 			for ($i = 0; $i < sizeof($path['search']); $i++) {
 				$tsrc = $path['search'][$i];
