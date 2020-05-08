@@ -1,11 +1,8 @@
 <?php
-use infrajs\access\Access;
+
 use infrajs\config\Config;
 
-Access::admin(true);
-
-$conf = Config::get();
-
-echo '<pre>';
-print_r($conf);
-
+$conf = Config::pub();
+header('Content-type: application/javascript');
+echo 'export default ';
+echo json_encode($conf, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

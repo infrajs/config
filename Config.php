@@ -423,6 +423,25 @@ class Config {
 		});
 		return $newpart;
 	}
+	public static function runnow($name, $callback, &$ready) {
+		if (!isset(Config::$conf[$name])) return;
+		if (isset($ready[$name])) return;
+		$conf = &Config::$conf[$name];
+		if (!empty($conf['dependencies'])) {
+			if (!is_array($conf['dependencies'])) $conf['dependencies'] = [$conf['dependencies']];
+			foreach ($conf['dependencies'] as $d) {
+				Config::runnow($d, $callback, $ready);
+			}
+		}
+		$ready[$name] = true;
+		$callback($name, $conf);
+	}
+	public static function run($callback, $ready = []) {
+		$conf = Config::get();
+		foreach ($conf as $name => $c) {
+			Config::runnow($name, $callback, $ready);
+		}
+	} 
 	public static function &pub($plugin = null) 
 	{
 		if ($plugin) {
