@@ -1,4 +1,4 @@
-import conf from '/vendor/infrajs/config/'
+import conf from '/-config/'
 let Config = {}
 window.Config = Config
 Config.conf = conf
