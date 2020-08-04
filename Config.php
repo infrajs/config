@@ -3,7 +3,6 @@ namespace infrajs\config;
 use infrajs\load\Load;
 use infrajs\each\Each;
 use infrajs\path\Path;
-use infrajs\once\Once;
 
 
 class Config {
