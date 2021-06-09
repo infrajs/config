@@ -433,10 +433,11 @@ class Config {
 	}
 	public static function run($callback, $ready = []) {
 		$conf = Config::get();
-		Config::runnow('index', $callback, $ready);
+		if (isset($conf['index'])) unset($conf['index']);
 		foreach ($conf as $name => $c) {
 			Config::runnow($name, $callback, $ready);
 		}
+		Config::runnow('index', $callback, $ready);
 	} 
 	public static function &pub($plugin = null) 
 	{
