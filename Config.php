@@ -201,6 +201,46 @@ class Config {
 		closedir($d);
 		return $r;
 	}
+	public static function scans($idir, $fn, $takefiles = false, $level = 0)
+	{
+
+		$src = Path::theme($idir);
+		if (!$idir) $src = './';
+
+		$d = opendir($src);
+		$r = null;
+		while ($file = readdir($d)) {
+			$file = Path::tofs($file);
+			if ($file == '..') continue;
+			if ($file == '.') continue;
+			$dir = $idir.Path::toutf($file);
+			$isdir = is_dir($src.$file);
+			if ($isdir) {
+				$dir = $dir.'/';
+				$file = $file.'/';
+			}
+
+			if ($takefiles && !$isdir || !$takefiles && $isdir) {
+				$r = $fn($dir, $level);
+				if ($r === true) {
+					$r = null;
+					continue;
+				} 
+				if ($r === false) {
+					$r = null;
+					break;
+				}
+				if (!is_null($r)) break;
+			}
+
+			if ($isdir) {
+				$r = static::scans($dir, $fn, $takefiles, $level + 1);
+				if (!is_null($r)) break; 
+			}
+		}
+		closedir($d);
+		return $r;
+	}
 	public static function &getAll()
 	{
 		Config::$all = true;
